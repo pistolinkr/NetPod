@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WiFi 간섭 실험실</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌐 WiFi 간섭 실험실</h1>
+            <p>2.4GHz vs 5GHz 대역대 간섭 현상 시뮬레이션</p>
+        </header>
+
+        <div class="knowledge-section">
+            <h2>📚 WiFi 기본 지식</h2>
+            <div class="knowledge-grid">
+                <div class="knowledge-card">
+                    <h3>2.4GHz 대역대</h3>
+                    <p><strong>장점:</strong> 벽 투과력이 좋고, 장거리 전송에 유리</p>
+                    <p><strong>단점:</strong> 속도가 느리고, 다른 기기들과 간섭이 많음</p>
+                    <p><strong>사용 이유:</strong> 블루투스, 마이크로웨이브, 무선전화 등과 같은 주파수 대역을 공유하여 일상생활에서 가장 안정적으로 작동</p>
+                </div>
+                <div class="knowledge-card">
+                    <h3>5GHz 대역대</h3>
+                    <p><strong>장점:</strong> 빠른 전송 속도, 간섭이 적음</p>
+                    <p><strong>단점:</strong> 벽 투과력이 약하고, 범위가 좁음</p>
+                    <p><strong>사용 이유:</strong> 고속 데이터 전송이 필요한 스트리밍, 게임, 대용량 파일 전송에 최적화</p>
+                </div>
+                <div class="knowledge-card">
+                    <h3>간섭이란?</h3>
+                    <p>여러 전자기 신호가 서로 방해를 일으키는 현상</p>
+                    <p><strong>예시:</strong> 라디오에서 다른 방송이 들리는 것처럼, WiFi 신호도 다른 기기나 장애물에 의해 방해받을 수 있음</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="experiment-section">
+            <h2>🧪 실험 설정</h2>
+            
+            <div class="control-panel">
+                <div class="control-group">
+                    <label for="frequency">주파수 대역:</label>
+                    <select id="frequency">
+                        <option value="2.4">2.4GHz</option>
+                        <option value="5">5GHz</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label for="distance">거리 (미터):</label>
+                    <input type="range" id="distance" min="1" max="20" value="3" step="0.5">
+                    <span id="distanceValue">3m</span>
+                </div>
+
+                <div class="control-group">
+                    <label for="walls">벽 개수:</label>
+                    <input type="range" id="walls" min="0" max="5" value="1" step="1">
+                    <span id="wallsValue">1개</span>
+                </div>
+
+                <div class="control-group">
+                    <label for="interference">간섭 강도:</label>
+                    <input type="range" id="interference" min="0" max="100" value="20" step="5">
+                    <span id="interferenceValue">20%</span>
+                </div>
+
+                <div class="control-group">
+                    <label for="channel">WiFi 채널:</label>
+                    <select id="channel">
+                        <option value="1">채널 1</option>
+                        <option value="6">채널 6</option>
+                        <option value="11">채널 11</option>
+                        <option value="auto">자동 선택</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label for="power">전송 파워:</label>
+                    <input type="range" id="power" min="10" max="100" value="100" step="5">
+                    <span id="powerValue">100%</span>
+                </div>
+
+                <div class="control-group">
+                    <label for="weather">날씨 조건:</label>
+                    <select id="weather">
+                        <option value="clear">맑음</option>
+                        <option value="rainy">비</option>
+                        <option value="humid">습함</option>
+                        <option value="dry">건조</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label for="time">시간대:</label>
+                    <select id="time">
+                        <option value="morning">아침 (6-12시)</option>
+                        <option value="afternoon">오후 (12-18시)</option>
+                        <option value="evening">저녁 (18-24시)</option>
+                        <option value="night">새벽 (0-6시)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button id="startExperiment" class="btn-primary">실험 시작</button>
+                <button id="resetExperiment" class="btn-secondary">실험 초기화</button>
+                <button id="saveResults" class="btn-success">결과 저장</button>
+            </div>
+        </div>
+
+        <div class="results-section">
+            <h2>📊 실험 결과</h2>
+            
+            <div class="results-grid">
+                <div class="result-card">
+                    <h3>신호 강도 (RSSI)</h3>
+                    <div class="meter">
+                        <div class="meter-fill" id="rssiMeter"></div>
+                    </div>
+                    <p id="rssiValue">-31 dBm</p>
+                </div>
+
+                <div class="result-card">
+                    <h3>전송 속도</h3>
+                    <div class="speed-display">
+                        <p>다운로드: <span id="downloadSpeed">120 Mbps</span></p>
+                        <p>업로드: <span id="uploadSpeed">85 Mbps</span></p>
+                    </div>
+                </div>
+
+                <div class="result-card">
+                    <h3>신호 품질</h3>
+                    <div class="quality-indicator">
+                        <div class="quality-bar" id="qualityBar"></div>
+                        <p id="qualityText">양호</p>
+                    </div>
+                </div>
+
+                <div class="result-card">
+                    <h3>간섭 지수</h3>
+                    <div class="interference-meter">
+                        <div class="interference-fill" id="interferenceMeter"></div>
+                    </div>
+                    <p id="interferenceIndex">낮음</p>
+                </div>
+            </div>
+
+            <div class="real-time-graph">
+                <h3>실시간 신호 변화</h3>
+                <div class="chart-container">
+                    <canvas id="signalChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="guide-section">
+            <h2>📖 사용 가이드</h2>
+            <div class="guide-content">
+                <h3>1단계: 기본 설정</h3>
+                <p>먼저 테스트하고 싶은 WiFi 주파수 대역을 선택하세요. 2.4GHz는 안정적이지만 느리고, 5GHz는 빠르지만 범위가 좁습니다.</p>
+                
+                <h3>2단계: 환경 변수 조정</h3>
+                <p>거리, 벽 개수, 간섭 강도 등을 조정하여 실제 환경을 시뮬레이션해보세요. 각 변수가 신호에 미치는 영향을 관찰할 수 있습니다.</p>
+                
+                <h3>3단계: 실험 실행</h3>
+                <p>"실험 시작" 버튼을 클릭하면 설정된 조건에서 WiFi 신호가 어떻게 변화하는지 실시간으로 확인할 수 있습니다.</p>
+                
+                <h3>4단계: 결과 분석</h3>
+                <p>RSSI(신호 강도), 전송 속도, 신호 품질 등을 통해 현재 설정이 WiFi 성능에 미치는 영향을 분석해보세요.</p>
+                
+                <h3>💡 실험 팁</h3>
+                <ul>
+                    <li>2.4GHz는 벽 투과력이 좋아 여러 방에서 사용하기 좋습니다</li>
+                    <li>5GHz는 빠른 속도가 필요할 때 사용하세요</li>
+                    <li>채널 1, 6, 11은 서로 간섭이 적습니다</li>
+                    <li>습한 날씨는 WiFi 신호를 약하게 만듭니다</li>
+                    <li>저녁 시간대는 다른 사용자들이 많아 간섭이 증가할 수 있습니다</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="comparison-section">
+            <h2>🔍 2.4GHz vs 5GHz 상세 비교</h2>
+            <div class="comparison-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>구분</th>
+                            <th>2.4GHz</th>
+                            <th>5GHz</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>주파수 범위</td>
+                            <td>2.4 ~ 2.5 GHz</td>
+                            <td>5.15 ~ 5.85 GHz</td>
+                        </tr>
+                        <tr>
+                            <td>전송 속도</td>
+                            <td>최대 600 Mbps</td>
+                            <td>최대 9.6 Gbps</td>
+                        </tr>
+                        <tr>
+                            <td>범위</td>
+                            <td>넓음 (약 50m)</td>
+                            <td>좁음 (약 30m)</td>
+                        </tr>
+                        <tr>
+                            <td>벽 투과력</td>
+                            <td>좋음</td>
+                            <td>나쁨</td>
+                        </tr>
+                        <tr>
+                            <td>간섭</td>
+                            <td>많음</td>
+                            <td>적음</td>
+                        </tr>
+                        <tr>
+                            <td>사용 시기</td>
+                            <td>일반 인터넷 사용</td>
+                            <td>고속 스트리밍, 게임</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
