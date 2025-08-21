@@ -292,20 +292,31 @@ header p {
 /* Real-time Graph */
 .real-time-graph {
     text-align: center;
+    padding: 20px; /* 전체 여백 조정 */
+    margin-bottom: 40px; /* 다음 섹션과의 간격 유지 */
+    overflow: hidden; /* 차트가 섹션을 벗어나지 않도록 */
 }
 
 .real-time-graph h3 {
     color: #000000;
-    margin-bottom: 20px;
+    margin-bottom: 30px; /* 제목 아래 여백 증가 */
     font-size: 1.3rem;
 }
 
-.chart-container {
+#signalChart {
     position: relative;
-    height: 400px;
-    width: 100%;
+    width: 1006px; /* 정확한 너비 설정 */
+    height: 564.94px; /* 정확한 높이 설정 */
     margin: 0 auto;
+    padding-bottom: 0; /* 패딩 제거하여 정확한 크기 보장 */
+    background: #ffffff;
+    border: 1px solid #000000;
+    display: block;
 }
+
+
+
+
 
 #signalChart {
     background: #ffffff;
@@ -698,6 +709,7 @@ header p {
     #signalChart {
         width: 100%;
         height: 150px;
+        z-index: 1000;
     }
 
     .specs-grid {
@@ -1341,6 +1353,72 @@ header p {
     }
 }
 
+/* JSON Import Section */
+.json-import-section {
+    border: 1px solid #000000;
+    padding: 20px;
+    margin: 20px 0;
+    background: #ffffff;
+}
+
+/* 설정 모달 내 JSON import 섹션 스타일 */
+.settings-modal .json-import-section {
+    border: 1px solid #000000;
+    padding: 15px;
+    margin: 15px 0;
+    background: #ffffff;
+    border-radius: 0;
+}
+
+.settings-modal .json-import-section h3 {
+    color: #000000;
+    margin-bottom: 15px;
+    text-align: center;
+    border-bottom: 1px solid #000000;
+    padding-bottom: 8px;
+    font-size: 1.1rem;
+}
+
+.settings-modal .file-upload-area {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+    padding: 10px;
+    background: #f8f9fa;
+    border: 1px solid #000000;
+    border-radius: 0;
+}
+
+.settings-modal .import-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.settings-modal .import-options label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #000000;
+    font-size: 0.85rem;
+    cursor: pointer;
+    padding: 6px 10px;
+    background: #f8f9fa;
+    border: 1px solid #000000;
+    border-radius: 0;
+}
+
+.settings-modal .import-status {
+    margin-top: 10px;
+    padding: 8px;
+    border: 1px solid #000000;
+    border-radius: 0;
+    font-size: 0.85rem;
+    min-height: 18px;
+}
+
 /* Logo Styles */
 .logo-container {
     display: flex;
@@ -1441,8 +1519,8 @@ header p {
     left: 0;
     right: 0;
     background: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
     border: none; /* 테두리 제거 */
     z-index: 1000;
     box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
@@ -1633,7 +1711,7 @@ header p {
     border-radius: 4px;
 }
 
-.chart-container canvas {
+#signalChart {
     max-width: 100%;
     max-height: 100%;
     display: block;

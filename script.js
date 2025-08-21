@@ -7,23 +7,420 @@ class WiFiInterferenceLab {
         this.currentTime = 0;
         this.ctx = null;
         this.chartData = [];
+        this.canvas = null;
+        
+
         
         this.initializeElements();
         this.bindEvents();
-        this.initializeChart();
         
-        // 차트 초기화 완료 후 데이터 추가를 위한 지연
-        setTimeout(() => {
-            this.loadDefaultValues();
-            
-            // Update specs summary and dynamic messages initially
-            this.updateSpecsSummary();
-            this.updateDynamicMessages();
-            this.updateBroadbandMessages();
-        }, 200); // 차트 초기화를 위한 충분한 시간
+        // Canvas 차트 초기화
+        this.initializeCanvasChart();
         
         // Initialize drag and drop for settings button
         this.initializeDragAndDrop();
+        
+        // 초기화 완료 후 기본값 로드
+        setTimeout(() => {
+            this.loadDefaultValues();
+            this.updateSpecsSummary();
+            this.updateDynamicMessages();
+            this.updateBroadbandMessages();
+            
+            // 줌과 리사이즈 기능 재초기화
+            this.initializeZoomAndResize();
+            
+            // 강력한 차트 초기화
+            this.forceChartInitialization();
+        }, 100);
+    }
+
+    // Canvas 차트 초기화
+    initializeCanvasChart() {
+        console.log('=== Canvas 차트 초기화 시작 ===');
+        
+        this.canvas = document.getElementById('signalChart');
+        if (!this.canvas) {
+            console.error('❌ Signal chart canvas not found!');
+            return;
+        }
+        
+        this.ctx = this.canvas.getContext('2d');
+        if (!this.ctx) {
+            console.error('❌ Failed to get canvas context!');
+            return;
+        }
+        
+        // 정확한 크기로 Canvas 설정 (1006×564.94) - 고정 크기
+        this.canvas.width = 1006;
+        this.canvas.height = 564.94;
+        
+        // 정확한 표시 크기 설정
+        this.canvas.style.width = '1006px';
+        this.canvas.style.height = '564.94px';
+        
+        // 렌더링 품질 향상
+        this.ctx.imageSmoothingEnabled = true;
+        this.ctx.imageSmoothingQuality = 'high';
+        
+        console.log('✅ Fixed-size Canvas initialized:', this.canvas.width, 'x', this.canvas.height);
+        console.log('Display size:', this.canvas.style.width, 'x', this.canvas.style.height);
+        
+        // 즉시 초기 차트 그리기
+        this.drawInitialChart();
+    }
+
+    // 초기 차트 그리기
+    drawInitialChart() {
+        if (!this.ctx || !this.canvas) {
+            console.error('❌ Canvas not ready in drawInitialChart');
+            return;
+        }
+        
+        console.log('=== 초기 차트 그리기 시작 ===');
+        console.log('Canvas dimensions:', this.canvas.width, 'x', this.canvas.height);
+        
+        try {
+            // Canvas 클리어
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            
+            // 배경 그리기
+            this.ctx.fillStyle = '#ffffff';
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            
+            // 테두리 그리기
+            this.ctx.strokeStyle = '#000000';
+            this.ctx.lineWidth = 1;
+            this.ctx.strokeRect(0, 0, this.canvas.width, this.canvas.height);
+            
+            // 격자 그리기
+            this.drawGrid();
+            
+            // 축 그리기
+            this.drawAxes();
+            
+            // 초기 데이터로 사인파 그리기
+            this.drawSineWave();
+            
+            console.log('✅ 초기 차트 그리기 완료');
+            
+        } catch (error) {
+            console.error('❌ 차트 그리기 중 에러:', error);
+        }
+    }
+
+    // 고화질 격자 그리기
+    drawGrid() {
+        if (!this.ctx || !this.canvas) return;
+        
+        this.ctx.strokeStyle = '#e8e8e8';
+        this.ctx.lineWidth = 0.5;
+        this.ctx.lineCap = 'round';
+        this.ctx.lineJoin = 'round';
+        
+        // 격자 간격 (고정)
+        const gridSpacingX = 25;
+        const gridSpacingY = 20;
+        
+        // 세로 격자 (시간축)
+        for (let x = 0; x <= this.canvas.width; x += gridSpacingX) {
+            this.ctx.beginPath();
+            this.ctx.moveTo(x, 0);
+            this.ctx.lineTo(x, this.canvas.height);
+            this.ctx.stroke();
+        }
+        
+        // 가로 격자 (RSSI축)
+        for (let y = 0; y <= this.canvas.height; y += gridSpacingY) {
+            this.ctx.beginPath();
+            this.ctx.moveTo(0, y);
+            this.ctx.lineTo(this.canvas.width, y);
+            this.ctx.stroke();
+        }
+    }
+
+    // 고화질 축 그리기
+    drawAxes() {
+        if (!this.ctx || !this.canvas) return;
+        
+        this.ctx.strokeStyle = '#000000';
+        this.ctx.lineWidth = 2;
+        this.ctx.lineCap = 'round';
+        this.ctx.lineJoin = 'round';
+        this.ctx.fillStyle = '#000000';
+        this.ctx.font = 'bold 12px Arial';
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        
+        // Y축 (RSSI) - 선명한 선
+        this.ctx.lineWidth = 2;
+        this.ctx.beginPath();
+        this.ctx.moveTo(50, 20);
+        this.ctx.lineTo(50, this.canvas.height - 20);
+        this.ctx.stroke();
+        
+        // Y축 라벨 - 회전된 텍스트 (범위 표시, 가독성 향상)
+        this.ctx.save();
+        this.ctx.translate(20, this.canvas.height / 2);
+        this.ctx.rotate(-Math.PI / 2);
+        this.ctx.font = 'bold 14px Arial';
+        this.ctx.fillStyle = '#000000'; // 색상 명확하게
+        this.ctx.fillText('RSSI (-40~-100 dBm)', 0, 0);
+        this.ctx.restore();
+        
+        // Y축 범위 표시 (상단과 하단)
+        this.ctx.font = 'bold 10px Arial';
+        this.ctx.fillStyle = '#000000';
+        this.ctx.textAlign = 'center';
+        
+        // Y축 눈금 - 캔버스 전체 높이 활용 (범위 -40 ~ -100 dBm, 가독성 향상)
+        this.ctx.font = 'bold 12px Arial';
+        this.ctx.fillStyle = '#000000'; // 색상 명확하게
+        this.ctx.textAlign = 'right'; // 오른쪽 정렬로 더 깔끔하게
+        
+        for (let i = 0; i <= 12; i++) {
+            const y = 20 + (this.canvas.height - 40) * i / 12;
+            const rssi = -40 - (60 * i / 12); // -40 dBm ~ -100 dBm 범위 (60dB 범위)
+            
+            this.ctx.beginPath();
+            this.ctx.moveTo(45, y);
+            this.ctx.lineTo(55, y);
+            this.ctx.stroke();
+            
+            // 숫자 텍스트를 더 명확하게 표시
+            this.ctx.fillText(rssi.toString(), 35, y);
+        }
+        
+        // -100 dBm이 확실히 보이도록 추가 눈금
+        const y100 = 20 + (this.canvas.height - 40) * 12 / 12; // 맨 아래
+        this.ctx.beginPath();
+        this.ctx.moveTo(45, y100);
+        this.ctx.lineTo(55, y100);
+        this.ctx.stroke();
+        this.ctx.fillText('-100', 35, y100);
+        
+        // X축 (시간) - 선명한 선
+        this.ctx.lineWidth = 2;
+        this.ctx.beginPath();
+        this.ctx.moveTo(50, this.canvas.height - 20);
+        this.ctx.lineTo(this.canvas.width - 20, this.canvas.height - 20);
+        this.ctx.stroke();
+        
+        // X축 라벨 (가독성 향상, 줌 적용)
+        this.ctx.font = 'bold 14px Arial'; // 줌에 따른 폰트 크기 조정
+        this.ctx.fillStyle = '#000000'; // 색상 명확하게
+        this.ctx.textAlign = 'center'; // 중앙 정렬
+        this.ctx.fillText('시간 (초)', this.canvas.width / 2, this.canvas.height - 5);
+        
+        // X축 눈금 - 캔버스 전체 너비 활용 (가독성 향상, 줌 적용)
+        this.ctx.font = 'bold 12px Arial'; // 줌에 따른 폰트 크기 조정
+        this.ctx.fillStyle = '#000000'; // 색상 명확하게
+        this.ctx.textAlign = 'center'; // 중앙 정렬
+        
+        for (let i = 0; i <= 20; i++) {
+            const x = 50 + (this.canvas.width - 70) * i / 20;
+            const time = i * 2.5;
+            
+            this.ctx.beginPath();
+            this.ctx.moveTo(x, this.canvas.height - 25);
+            this.ctx.lineTo(x, this.canvas.height - 15);
+            this.ctx.stroke();
+            
+            // 시간 텍스트를 더 명확하게 표시
+            this.ctx.fillText(time.toString(), x, this.canvas.height - 5);
+        }
+    }
+
+    // 고화질 사인파 그리기
+    drawSineWave() {
+        if (!this.ctx || !this.canvas) {
+            console.error('❌ Canvas not ready in drawSineWave');
+            return;
+        }
+        
+        console.log('🎵 사인파 그리기 시작...');
+        
+        try {
+            this.ctx.strokeStyle = '#000000';
+            this.ctx.lineWidth = 2.5;
+            this.ctx.lineCap = 'round';
+            this.ctx.lineJoin = 'round';
+            this.ctx.beginPath();
+            
+            const startX = 50;
+            const endX = this.canvas.width - 20;
+            const amplitude = 30;
+            
+            console.log('사인파 범위:', startX, '~', endX, 'px');
+            
+            // 더 조밀한 포인트로 부드러운 곡선
+            for (let x = startX; x <= endX; x += 0.5) {
+                const normalizedX = (x - startX) / (endX - startX);
+                const time = normalizedX * 50; // 0-50초
+                
+                // 복잡한 파형 (사인파 + 코사인파 + 노이즈) - 범위 중앙에 맞춤
+                const rssi = -60 + 
+                            Math.sin(time * 0.3) * 15 + // 진폭을 15로 조정 (범위의 1/3)
+                            Math.cos(time * 0.2) * 10 + // 진폭을 10으로 조정
+                            Math.sin(time * 0.1) * 5;   // 진폭을 5로 조정
+                
+                // RSSI를 Y좌표로 변환 (-100 ~ -40 dBm -> 20 ~ height-20, 캔버스 전체 높이 활용)
+                let y = 20 + (this.canvas.height - 40) * (rssi + 100) / 60;
+                
+                // -100 dBm이 맨 아래에 오도록 보장
+                if (rssi <= -100) {
+                    y = this.canvas.height - 20;
+                }
+                
+                if (x === startX) {
+                    this.ctx.moveTo(x, y);
+                } else {
+                    this.ctx.lineTo(x, y);
+                }
+            }
+            
+            this.ctx.stroke();
+            console.log('✅ 사인파 그리기 완료');
+            
+        } catch (error) {
+            console.error('❌ 사인파 그리기 중 에러:', error);
+        }
+    }
+
+    // 실시간 데이터 추가 및 차트 업데이트
+    addChartData(rssi) {
+        console.log('=== 차트 데이터 추가 시작 ===');
+        
+        if (!this.ctx || !this.canvas) {
+            console.log('⚠️ Canvas not ready, storing data only');
+            return;
+        }
+        
+        // 데이터 저장
+        let time = this.currentTime;
+        let enhancedRSSI = rssi + Math.sin(time * 0.2) * 3; // 진폭을 3으로 조정
+        enhancedRSSI = Math.max(-100, Math.min(-40, enhancedRSSI)); // 범위를 -100 ~ -40 dBm으로 조정
+        
+        // -100 dBm까지 확실히 표시되도록 범위 확장
+        if (enhancedRSSI < -95) {
+            enhancedRSSI = -95; // -100 dBm 근처까지 표시
+        }
+        
+        this.chartData.push({ time, rssi: enhancedRSSI });
+        
+        // 최근 100개 데이터만 유지
+        if (this.chartData.length > 100) {
+            this.chartData.shift();
+        }
+        
+        // 차트 업데이트
+        this.updateCanvasChart();
+        
+        console.log(`✅ Data added: time=${time}, rssi=${enhancedRSSI}`);
+    }
+
+    // Canvas 차트 업데이트
+    updateCanvasChart() {
+        console.log('🔄 updateCanvasChart 호출됨');
+        console.log('Canvas 상태:', { ctx: !!this.ctx, canvas: !!this.canvas, dataLength: this.chartData.length });
+        
+        if (!this.ctx || !this.canvas) {
+            console.log('⚠️ Canvas not ready');
+            return;
+        }
+        
+        // 데이터가 없어도 초기 차트는 그리기
+        if (this.chartData.length === 0) {
+            console.log('📊 데이터 없음, 초기 차트 그리기');
+            this.drawInitialChart();
+            return;
+        }
+        
+        console.log('✅ 실시간 데이터로 차트 업데이트');
+        
+        // Canvas 클리어
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        // 배경 그리기
+        this.ctx.fillStyle = '#ffffff';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        // 테두리 그리기
+        this.ctx.strokeStyle = '#000000';
+        this.ctx.lineWidth = 1;
+        this.ctx.strokeRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        // 격자 그리기
+        this.drawGrid();
+        
+        // 축 그리기
+        this.drawAxes();
+        
+        // 고화질 실시간 데이터 그리기
+        this.drawRealTimeData();
+    }
+
+    // 고화질 실시간 데이터 그리기
+    drawRealTimeData() {
+        console.log('🎨 drawRealTimeData 호출됨, 데이터 개수:', this.chartData.length);
+        
+        if (!this.ctx || !this.canvas) {
+            console.log('⚠️ Canvas not ready in drawRealTimeData');
+            return;
+        }
+        
+        if (this.chartData.length === 0) {
+            console.log('📊 데이터 없음, 초기 차트 그리기');
+            this.drawInitialChart();
+            return;
+        }
+        
+        console.log('✅ 실시간 데이터로 차트 그리기 시작');
+        
+        // 메인 라인 그리기
+        this.ctx.strokeStyle = '#000000';
+        this.ctx.lineWidth = 3;
+        this.ctx.lineCap = 'round';
+        this.ctx.lineJoin = 'round';
+        this.ctx.beginPath();
+        
+        const startX = 50;
+        const endX = this.canvas.width - 20;
+        
+        this.chartData.forEach((point, index) => {
+            // 시간을 X좌표로 변환
+            const x = startX + (endX - startX) * (index / (this.chartData.length - 1));
+            
+            // RSSI를 Y좌표로 변환 (-100 ~ -40 dBm -> 20 ~ height-20)
+            const y = 20 + (this.canvas.height - 40) * (point.rssi + 100) / 60;
+            
+            if (index === 0) {
+                this.ctx.moveTo(x, y);
+            } else {
+                this.ctx.lineTo(x, y);
+            }
+        });
+        
+        this.ctx.stroke();
+        
+        // 데이터 포인트 표시 (고화질)
+        this.ctx.fillStyle = '#000000';
+        this.chartData.forEach((point, index) => {
+            const x = startX + (endX - startX) * (index / (this.chartData.length - 1));
+            const y = 20 + (this.canvas.height - 40) * (point.rssi + 100) / 60;
+            
+            // 그라데이션 효과가 있는 포인트
+            this.ctx.beginPath();
+            this.ctx.arc(x, y, 3, 0, 2 * Math.PI);
+            this.ctx.fill();
+            
+            // 포인트 테두리
+            this.ctx.strokeStyle = '#ffffff';
+            this.ctx.lineWidth = 1;
+            this.ctx.stroke();
+        });
+        
+        console.log('✅ 실시간 데이터 차트 그리기 완료');
     }
 
     initializeElements() {
@@ -100,17 +497,6 @@ class WiFiInterferenceLab {
         this.summaryUpload = document.getElementById('summaryUpload');
         this.summaryInternet = document.getElementById('summaryInternet');
         
-        // JSON import elements
-        this.jsonFileInput = document.getElementById('jsonFileInput');
-        this.selectJsonFile = document.getElementById('selectJsonFile');
-        this.selectedFileName = document.getElementById('selectedFileName');
-        this.overwriteCurrent = document.getElementById('overwriteCurrent');
-        this.loadChartData = document.getElementById('loadChartData');
-        this.loadRouterSpecs = document.getElementById('loadRouterSpecs');
-        this.loadBroadbandSpecs = document.getElementById('loadBroadbandSpecs');
-        this.loadJsonResults = document.getElementById('loadJsonResults');
-        this.importStatus = document.getElementById('importStatus');
-        
         // Settings button and modal elements
         this.settingsButton = document.getElementById('settingsButton');
         this.settingsModal = document.getElementById('settingsModal');
@@ -143,6 +529,11 @@ class WiFiInterferenceLab {
         this.navResetExperiment.addEventListener('click', () => this.resetExperiment());
         this.navLoadResults.addEventListener('click', () => this.navJsonFileInput.click());
         this.navJsonFileInput.addEventListener('change', (e) => this.handleNavFileSelection(e));
+        
+
+        
+        // 시그널 차트 요소 확인
+        this.signalChart = document.getElementById('signalChart');
     }
 
     bindEvents() {
@@ -201,256 +592,26 @@ class WiFiInterferenceLab {
         this.internetType.addEventListener('change', () => this.updateBroadbandSpecs());
         this.networkCongestion.addEventListener('change', () => this.updateBroadbandSpecs());
         
-        // JSON import events
-        this.selectJsonFile.addEventListener('click', () => this.jsonFileInput.click());
-        this.jsonFileInput.addEventListener('change', (e) => this.handleFileSelection(e));
-        this.loadJsonResults.addEventListener('click', () => this.loadJsonFile());
-        
-        // Settings button events
-        this.settingsButton.addEventListener('click', () => this.openSettings());
-        this.closeSettings.addEventListener('click', () => this.closeSettingsModal());
-        
-        // 모달 외부 클릭 시 닫기
-        this.settingsModal.addEventListener('click', (e) => {
-            if (e.target === this.settingsModal) {
-                this.closeSettingsModal();
-            }
-        });
-        
-        // ESC 키로 모달 닫기
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && this.settingsModal.classList.contains('show')) {
-                this.closeSettingsModal();
-            }
-        });
-        
-        // Navigation button events
-        this.navStartExperiment = document.getElementById('navStartExperiment');
-        this.navResetExperiment = document.getElementById('navResetExperiment');
-        this.navLoadResults = document.getElementById('navLoadResults');
-        this.navJsonFileInput = document.getElementById('navJsonFileInput');
-        
-        this.navStartExperiment.addEventListener('click', () => this.toggleExperiment());
-        this.navResetExperiment.addEventListener('click', () => this.resetExperiment());
-        this.navLoadResults.addEventListener('click', () => this.navJsonFileInput.click());
-        this.navJsonFileInput.addEventListener('change', (e) => this.handleNavFileSelection(e));
-    }
 
-    initializeChart() {
-        // Chart.js가 로드되었는지 확인
-        if (typeof Chart === 'undefined') {
-            console.error('Chart.js is not loaded! Please check if Chart.js is included in the HTML.');
-            this.showChartError('Chart.js가 로드되지 않았습니다. HTML에 Chart.js 스크립트를 포함해주세요.');
-            return;
-        }
-
-        // Canvas 요소 찾기
-        const canvas = document.getElementById('signalChart');
-        if (!canvas) {
-            console.error('Signal chart canvas not found!');
-            this.showChartError('차트 캔버스를 찾을 수 없습니다.');
-            return;
-        }
-
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-            console.error('Failed to get canvas context!');
-            this.showChartError('캔버스 컨텍스트를 가져올 수 없습니다.');
-            return;
-        }
-
-        console.log('Canvas found, dimensions:', canvas.offsetWidth, 'x', canvas.offsetHeight);
-
-        try {
-            // Chart.js 설정
-            this.chart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: [],
-                    datasets: [{
-                        label: 'RSSI (dBm)',
-                        data: [],
-                        borderColor: '#000000',
-                        backgroundColor: 'rgba(0, 0, 0, 0.05)', // Lighter fill
-                        borderWidth: 2, // Thinner line
-                        fill: true, // Fill area below line
-                        tension: 0.4, // Smoother curve
-                        pointRadius: 4, // Smaller points
-                        pointBackgroundColor: '#000000',
-                        pointBorderColor: '#ffffff',
-                        pointBorderWidth: 1,
-                        pointHoverRadius: 6,
-                        pointHoverBorderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    animation: {
-                        duration: 300, // Faster animation
-                        easing: 'easeInOutQuart'
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: false,
-                            min: -100,
-                            max: -30,
-                            grid: {
-                                color: '#e0e0e0', // Lighter grid
-                                lineWidth: 1
-                            },
-                            ticks: {
-                                color: '#666666', // Lighter ticks
-                                font: {
-                                    size: 11 // Smaller font
-                                },
-                                stepSize: 10
-                            },
-                            title: {
-                                display: true,
-                                text: 'RSSI (dBm)',
-                                color: '#000000',
-                                font: {
-                                    size: 13, // Smaller font
-                                    weight: '600' // Lighter weight
-                                }
-                            }
-                        },
-                        x: {
-                            grid: {
-                                color: '#e0e0e0', // Lighter grid
-                                lineWidth: 1
-                            },
-                            ticks: {
-                                color: '#666666', // Lighter ticks
-                                font: {
-                                    size: 11 // Smaller font
-                                },
-                                maxTicksLimit: 15 // Fewer ticks
-                            },
-                            title: {
-                                display: true,
-                                text: '시간 (초)',
-                                color: '#000000',
-                                font: {
-                                    size: 13, // Smaller font
-                                    weight: '600' // Lighter weight
-                                }
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            display: true,
-                            labels: {
-                                color: '#000000',
-                                font: {
-                                    size: 12,
-                                    weight: '500' // Added weight
-                                }
-                            }
-                        },
-                        tooltip: { // Re-added tooltip
-                            backgroundColor: '#ffffff',
-                            titleColor: '#000000',
-                            bodyColor: '#000000',
-                            borderColor: '#000000',
-                            borderWidth: 1,
-                            cornerRadius: 4,
-                            displayColors: false,
-                            callbacks: {
-                                label: function(context) {
-                                    return `RSSI: ${context.parsed.y.toFixed(1)} dBm`;
-                                }
-                            }
-                        }
-                    },
-                    interaction: { // Re-added interaction
-                        intersect: false,
-                        mode: 'index'
-                    }
-                }
-            });
-
-            console.log('Chart initialized successfully, chart object:', this.chart);
-            
-            // 차트가 제대로 생성되었는지 확인
-            if (this.chart && this.chart.data && this.chart.data.datasets) {
-                console.log('Chart verification successful, datasets:', this.chart.data.datasets.length);
-                // 초기 데이터 추가 (빈 차트 방지)
-                this.addInitialChartData();
-            } else {
-                console.error('Chart verification failed!');
-            }
-            
-        } catch (error) {
-            console.error('Error initializing chart:', error);
-            this.showChartError(`차트 초기화 오류: ${error.message}`);
-        }
-    }
-
-    // 차트 에러 표시
-    showChartError(message) {
-        const chartContainer = document.querySelector('.chart-container');
-        if (chartContainer) {
-            chartContainer.innerHTML = `
-                <div style="text-align: center; padding: 40px; color: #666; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px;">
-                    <div style="font-size: 24px; margin-bottom: 10px;">⚠️</div>
-                    <div style="font-size: 16px; margin-bottom: 10px; font-weight: 600;">차트를 불러올 수 없습니다</div>
-                    <div style="font-size: 14px; color: #888;">${message}</div>
-                    <button onclick="location.reload()" style="margin-top: 20px; padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">페이지 새로고침</button>
-                </div>
-            `;
-        }
-    }
-
-    // 초기 차트 데이터 추가 (빈 차트 방지)
-    addInitialChartData() {
-        if (!this.chart) return;
         
-        // 기존 데이터 초기화
-        this.chartData = [];
+
         
-        // 샘플 데이터 생성 (100개 포인트로 증가)
-        for (let i = 0; i < 100; i++) {
-            const time = i;
-            const baseRSSI = -60; // 기본 RSSI 값
-            
-            // 더 명확한 사인파 패턴 생성
-            const sineVariation = Math.sin(i * 0.3) * 15; // 진폭 증가, 주기 조정
-            const cosineVariation = Math.cos(i * 0.15) * 8; // 코사인 변동
-            const noiseVariation = (Math.random() - 0.5) * 3; // 노이즈 증가
-            
-            let rssi = baseRSSI + sineVariation + cosineVariation + noiseVariation;
-            rssi = Math.max(-100, Math.min(-30, rssi));
-            
-            this.chartData.push({ time, rssi });
-        }
-        
-        this.updateChart();
-        console.log('Initial chart data added:', this.chartData.length, 'points');
-        
-        // 차트가 제대로 표시되는지 확인
-        if (this.chart && this.chart.data && this.chart.data.datasets[0].data.length > 0) {
-            console.log('Chart data verified:', this.chart.data.datasets[0].data.length, 'points');
-        } else {
-            console.error('Chart data verification failed!');
-        }
+
     }
 
     loadDefaultValues() {
         // 기본값으로 계산 실행
         this.updateCalculations();
         
-        // 차트가 완전히 초기화되었는지 확인 후 초기 데이터 추가
-        if (this.chart && this.chart.data && this.chart.data.datasets) {
-            console.log('Chart is ready, adding initial data...');
+        // Canvas가 완전히 초기화되었는지 확인 후 초기 차트 그리기
+        if (this.canvas && this.ctx) {
+            console.log('✅ Canvas is ready, drawing initial chart...');
             if (this.chartData.length === 0) {
-                this.addInitialChartData();
+                this.drawInitialChart();
             }
         } else {
-            console.log('Chart not ready yet, waiting...');
-            // 차트가 준비되지 않았다면 다시 시도
+            console.log('⏳ Canvas not ready yet, retrying in 100ms...');
+            // Canvas가 준비되지 않았다면 다시 시도
             setTimeout(() => {
                 this.loadDefaultValues();
             }, 100);
@@ -458,6 +619,8 @@ class WiFiInterferenceLab {
     }
 
     updateCalculations() {
+        console.log('🔄 계산 업데이트 시작...');
+        
         // 실험 중일 때도 차트 업데이트 허용
         const frequency = parseFloat(this.elements.frequency.value);
         const distance = parseFloat(this.elements.distance.value);
@@ -468,13 +631,38 @@ class WiFiInterferenceLab {
         const weather = this.elements.weather.value;
         const time = this.elements.time.value;
 
+        // 공유기 스펙 가져오기
+        const router24Power = parseInt(this.router24Power?.value || 100);
+        const router5Power = parseInt(this.router5Power?.value || 100);
+        const router24Bandwidth = parseInt(this.router24Bandwidth?.value || 20);
+        const router5Bandwidth = parseInt(this.router5Bandwidth?.value || 80);
+        
+        // 브로드밴드 설정 가져오기
+        const maxDownloadSpeed = parseFloat(this.maxDownloadSpeed?.value || 100);
+        const maxUploadSpeed = parseFloat(this.maxUploadSpeed?.value || 50);
+        const downloadSpeedUnit = this.downloadSpeedUnit?.value || 'Mbps';
+        const uploadSpeedUnit = this.uploadSpeedUnit?.value || 'Mbps';
+        
+        console.log('📊 공유기 스펙:', { router24Power, router5Power, router24Bandwidth, router5Bandwidth });
+        console.log('🌐 브로드밴드 설정:', { maxDownloadSpeed, maxUploadSpeed, downloadSpeedUnit, uploadSpeedUnit });
+
+        // 주파수별 전송 파워 적용
+        let actualPower;
+        if (frequency === 2.4) {
+            actualPower = router24Power;
+        } else {
+            actualPower = router5Power;
+        }
+        
+        console.log('⚡ 실제 적용 파워:', actualPower, 'mW (주파수:', frequency, 'GHz)');
+
         // RSSI 계산 (실제 WiFi 공학 공식 기반)
-        let baseRSSI = this.calculateBaseRSSI(frequency, distance, walls, power);
+        let baseRSSI = this.calculateBaseRSSI(frequency, distance, walls, actualPower);
         let interferenceEffect = this.calculateInterferenceEffect(interference, channel, weather, time);
         let finalRSSI = baseRSSI - interferenceEffect;
 
-        // 전송 속도 계산
-        let speeds = this.calculateSpeed(frequency, finalRSSI, interference);
+        // 전송 속도 계산 (브로드밴드 제한 적용)
+        let speeds = this.calculateSpeed(frequency, finalRSSI, interference, maxDownloadSpeed, maxUploadSpeed);
 
         // 신호 품질 계산
         let quality = this.calculateQuality(finalRSSI, interference);
@@ -482,10 +670,7 @@ class WiFiInterferenceLab {
         // UI 업데이트
         this.updateUI(finalRSSI, speeds, quality, interference);
         
-        // 실험 중일 때는 차트 데이터 추가 (updateUI에서 처리됨)
-        // if (this.isExperimentRunning) {
-        //     this.addChartData(finalRSSI);
-        // }
+        console.log('✅ 계산 업데이트 완료');
     }
 
     updateChart() {
@@ -607,7 +792,9 @@ class WiFiInterferenceLab {
         return totalInterference;
     }
 
-    calculateSpeed(frequency, rssi, interference) {
+    calculateSpeed(frequency, rssi, interference, maxDownloadSpeed = 100, maxUploadSpeed = 50) {
+        console.log('🚀 속도 계산 시작:', { frequency, rssi, interference, maxDownloadSpeed, maxUploadSpeed });
+        
         // RSSI 기반 최대 속도 계산 (주파수별로 다른 특성)
         let maxSpeed;
         if (frequency === 2.4) {
@@ -629,21 +816,39 @@ class WiFiInterferenceLab {
         
         let actualMaxSpeed = maxSpeed * interferenceFactor;
         
-        // 다운로드/업로드 속도 계산 (주파수별로 다른 비율)
+        // 브로드밴드 제한 적용 (가장 중요한 부분!)
+        let limitedMaxSpeed = Math.min(actualMaxSpeed, maxDownloadSpeed);
+        
+        console.log('📊 속도 제한:', { 
+            actualMaxSpeed: Math.round(actualMaxSpeed), 
+            maxDownloadSpeed, 
+            limitedMaxSpeed: Math.round(limitedMaxSpeed) 
+        });
+        
+        // 다운로드/업로드 속도 계산 (브로드밴드 제한 적용)
         let downloadSpeed, uploadSpeed;
         
         if (frequency === 2.4) {
             // 2.4GHz: 다운로드 70-90%, 업로드 40-70%
-            downloadSpeed = actualMaxSpeed * (0.7 + Math.random() * 0.2);
-            uploadSpeed = actualMaxSpeed * (0.4 + Math.random() * 0.3);
+            downloadSpeed = limitedMaxSpeed * (0.7 + Math.random() * 0.2);
+            uploadSpeed = limitedMaxSpeed * (0.4 + Math.random() * 0.3);
         } else {
             // 5GHz: 다운로드 80-95%, 업로드 60-85% (더 균형잡힌 비율)
-            downloadSpeed = actualMaxSpeed * (0.8 + Math.random() * 0.15);
-            uploadSpeed = actualMaxSpeed * (0.6 + Math.random() * 0.25);
+            downloadSpeed = limitedMaxSpeed * (0.8 + Math.random() * 0.15);
+            uploadSpeed = limitedMaxSpeed * (0.6 + Math.random() * 0.25);
         }
         
         // 업로드 속도가 다운로드 속도를 넘지 않도록 보장
         uploadSpeed = Math.min(uploadSpeed, downloadSpeed * 0.9);
+        
+        // 최종 브로드밴드 제한 적용
+        downloadSpeed = Math.min(downloadSpeed, maxDownloadSpeed);
+        uploadSpeed = Math.min(uploadSpeed, maxUploadSpeed);
+        
+        console.log('✅ 최종 속도:', { 
+            download: Math.round(downloadSpeed), 
+            upload: Math.round(uploadSpeed) 
+        });
         
         return {
             download: Math.round(downloadSpeed),
@@ -692,69 +897,22 @@ class WiFiInterferenceLab {
         let interferenceText = interference < 20 ? '낮음' : interference < 50 ? '보통' : interference < 80 ? '높음' : '매우 높음';
         this.elements.interferenceIndex.textContent = interferenceText;
         
-        // 차트 데이터 추가 - 차트 상태를 안전하게 확인
+        // 차트 데이터 추가 - Canvas 상태를 안전하게 확인
         if (this.isExperimentRunning) {
             this.addChartData(rssi);
-        } else if (this.chartData.length === 0 && this.chart && this.chart.data) {
-            // 실험 중이 아니고 차트 데이터가 없으며 차트가 준비된 경우에만 초기 데이터 생성
-            console.log('Adding initial chart data in updateUI...');
-            this.addInitialChartData();
-        }
-    }
-
-    addChartData(rssi) {
-        // 차트가 준비되지 않았으면 데이터만 저장하고 차트 업데이트는 하지 않음
-        if (!this.chart || !this.chart.data || !this.chart.data.datasets) {
-            console.log('Chart not ready, storing data only');
-            // 데이터는 저장
-            let time = this.currentTime;
-            let sineVariation = Math.sin(time * 0.2) * 8;
-            let cosineVariation = Math.cos(time * 0.1) * 5;
-            let noiseVariation = (Math.random() - 0.5) * 2;
-            
-            let enhancedRSSI = rssi + sineVariation + cosineVariation + noiseVariation;
-            enhancedRSSI = Math.max(-100, Math.min(-30, enhancedRSSI));
-            
-            this.chartData.push({ time, rssi: enhancedRSSI });
-            
-            // 최근 100개 데이터만 유지
-            if (this.chartData.length > 100) {
-                this.chartData.shift();
-            }
-            return;
+        } else if (this.chartData.length === 0 && this.canvas && this.ctx) {
+            // 실험 중이 아니고 차트 데이터가 없으며 Canvas가 준비된 경우에만 초기 데이터 생성
+            console.log('✅ Adding initial chart data in updateUI...');
+            this.drawInitialChart();
         }
         
-        // 더 부드러운 사인파 패턴을 위한 데이터 생성
-        let time = this.currentTime;
-        
-        // 디버깅을 위한 콘솔 로그
-        console.log(`Adding chart data: time=${time}, rssi=${rssi}`);
-        
-        // 기본 RSSI에 사인파 변동 추가 (더 명확한 패턴)
-        let sineVariation = Math.sin(time * 0.2) * 8; // 진폭 8dBm, 주기 약 31초
-        let cosineVariation = Math.cos(time * 0.1) * 5; // 코사인 변동 추가로 복합 패턴
-        let noiseVariation = (Math.random() - 0.5) * 2; // 랜덤 노이즈 2dBm
-        
-        let enhancedRSSI = rssi + sineVariation + cosineVariation + noiseVariation;
-        
-        // RSSI 범위 제한 (-100 ~ -30 dBm) - 절대값이 아닌 실제 음수 범위
-        enhancedRSSI = Math.max(-100, Math.min(-30, enhancedRSSI));
-        
-        console.log(`Enhanced RSSI: ${enhancedRSSI}, sine: ${sineVariation}, cosine: ${cosineVariation}`);
-        
-        this.chartData.push({ 
-            time: time, 
-            rssi: enhancedRSSI 
-        });
-        
-        console.log(`Chart data length: ${this.chartData.length}`);
-        
-        // 최근 100개 데이터만 유지 (더 긴 패턴 표시)
-        if (this.chartData.length > 100) {
-            this.chartData.shift();
+        // 페이지 로드 시 차트가 보이지 않는 경우 강제로 초기 차트 그리기
+        if (!this.isExperimentRunning && this.canvas && this.ctx && this.chartData.length === 0) {
+            console.log('🔄 페이지 로드 시 초기 차트 강제 그리기');
+            setTimeout(() => {
+                this.drawInitialChart();
+            }, 50);
         }
-        
-        this.updateChart();
     }
 
     toggleExperiment() {
@@ -789,14 +947,17 @@ class WiFiInterferenceLab {
         
         console.log('Chart data reset, current time:', this.currentTime);
         
-        // 차트 초기화
-        if (this.chart) {
-            console.log('Resetting chart...');
-            this.chart.data.labels = [];
-            this.chart.data.datasets[0].data = [];
-            this.chart.update();
+        // Canvas 차트 초기화 및 확인
+        if (this.canvas && this.ctx) {
+            console.log('✅ Canvas is ready, starting experiment...');
+            // 초기 차트 그리기
+            this.drawInitialChart();
         } else {
-            console.error('Chart is null during experiment start!');
+            console.error('❌ Canvas is not ready during experiment start!');
+            // Canvas가 준비되지 않았다면 초기화 시도
+            setTimeout(() => {
+                this.initializeCanvasChart();
+            }, 100);
         }
         
         // 초기 데이터 포인트 추가
@@ -834,6 +995,11 @@ class WiFiInterferenceLab {
         if (this.experimentInterval) {
             clearInterval(this.experimentInterval);
             this.experimentInterval = null;
+        }
+        
+        // 실험 중지 후 차트를 초기 상태로 복원
+        if (this.canvas && this.ctx) {
+            this.drawInitialChart();
         }
         
         // 사용자 피드백
@@ -911,68 +1077,79 @@ class WiFiInterferenceLab {
     }
 
     saveResults() {
-        if (this.chartData.length === 0) {
-            this.showNotification('저장할 실험 데이터가 없습니다.', 'warning');
-            return;
+        console.log('💾 결과 저장 시작...');
+        
+        // 차트 데이터 확인
+        if (!this.chartData || this.chartData.length === 0) {
+            console.log('⚠️ 차트 데이터 없음, 기본 데이터로 저장');
         }
         
-        // 실험 결과 데이터 구성
-        const experimentData = {
-            timestamp: new Date().toISOString(),
-            experimentSettings: {
-                frequency: this.elements.frequency.value,
-                distance: this.elements.distance.value,
-                walls: this.elements.walls.value,
-                interference: this.elements.interference.value,
-                channel: this.elements.channel.value,
-                power: this.elements.power.value,
-                weather: this.elements.weather.value,
-                time: this.elements.time.value
-            },
-            results: {
-                rssi: this.elements.rssiValue.textContent,
-                downloadSpeed: this.elements.downloadSpeed.textContent,
-                uploadSpeed: this.elements.uploadSpeed.textContent,
-                quality: this.elements.qualityText.textContent,
-                interference: this.elements.interferenceIndex.textContent
-            },
-            routerSpecs: {
-                power24: this.router24Power.value,
-                channel24: this.router24Channels.value,
-                bandwidth24: this.router24Bandwidth.value,
-                power5: this.router5Power.value,
-                channel5: this.router5Channels.value,
-                bandwidth5: this.router5Bandwidth.value,
-                antenna: this.routerAntenna.value,
-                height: this.routerHeight.value,
-                location: this.routerLocation.value
-            },
-            broadbandSpecs: {
-                maxDownloadSpeed: this.maxDownloadSpeed.value,
-                downloadSpeedUnit: this.downloadSpeedUnit.value,
-                downloadSpeedStability: this.downloadSpeedStability.value,
-                maxUploadSpeed: this.maxUploadSpeed.value,
-                uploadSpeedUnit: this.uploadSpeedUnit.value,
-                uploadSpeedStability: this.uploadSpeedStability.value,
-                internetType: this.internetType.value,
-                networkCongestion: this.networkCongestion.value
-            },
-            chartData: this.chartData
-        };
-        
-        // JSON 파일로 다운로드
-        const dataStr = JSON.stringify(experimentData, null, 2);
-        const dataBlob = new Blob([dataStr], { type: 'application/json' });
-        const url = URL.createObjectURL(dataBlob);
-        
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `netpod_experiment_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
-        link.click();
-        
-        URL.revokeObjectURL(url);
-        
-        this.showNotification('실험 결과가 저장되었습니다!', 'success');
+        try {
+            // 실험 결과 데이터 구성
+            const experimentData = {
+                timestamp: new Date().toISOString(),
+                experimentSettings: {
+                    frequency: this.elements.frequency?.value || '2.4GHz',
+                    distance: this.elements.distance?.value || '5',
+                    walls: this.elements.walls?.value || '0',
+                    interference: this.elements.interference?.value || '낮음',
+                    channel: this.elements.channel?.value || '1',
+                    power: this.elements.power?.value || '보통',
+                    weather: this.elements.weather?.value || '맑음',
+                    time: this.elements.time?.value || '낮'
+                },
+                results: {
+                    rssi: document.getElementById('rssiValue')?.textContent || '-60 dBm',
+                    downloadSpeed: document.getElementById('downloadSpeed')?.textContent || '100 Mbps',
+                    uploadSpeed: document.getElementById('uploadSpeed')?.textContent || '50 Mbps',
+                    quality: document.getElementById('qualityText')?.textContent || '보통',
+                    interference: document.getElementById('interferenceIndex')?.textContent || '낮음'
+                },
+                routerSpecs: {
+                    power24: this.router24Power?.value || '100',
+                    channel24: this.router24Channels?.value || '1',
+                    bandwidth24: this.router24Bandwidth?.value || '20',
+                    power5: this.router5Power?.value || '100',
+                    channel5: this.router5Channels?.value || '36',
+                    bandwidth5: this.router5Bandwidth?.value || '80',
+                    antenna: this.routerAntenna?.value || '2x2',
+                    height: this.routerHeight?.value || '1.5',
+                    location: this.routerLocation?.value || '거실'
+                },
+                broadbandSpecs: {
+                    maxDownloadSpeed: this.maxDownloadSpeed?.value || '100',
+                    downloadSpeedUnit: this.downloadSpeedUnit?.value || 'Mbps',
+                    downloadSpeedStability: this.downloadSpeedStability?.value || '안정적',
+                    maxUploadSpeed: this.maxUploadSpeed?.value || '50',
+                    uploadSpeedUnit: this.uploadSpeedUnit?.value || 'Mbps',
+                    uploadSpeedStability: this.uploadSpeedStability?.value || '안정적',
+                    internetType: this.internetType?.value || '광랜',
+                    networkCongestion: this.networkCongestion?.value || '낮음'
+                },
+                chartData: this.chartData || []
+            };
+            
+            console.log('📊 저장할 데이터:', experimentData);
+            
+            // JSON 파일로 다운로드
+            const dataStr = JSON.stringify(experimentData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `netpod_experiment_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
+            link.click();
+            
+            URL.revokeObjectURL(url);
+            
+            console.log('✅ 결과 저장 완료');
+            this.showNotification('실험 결과가 저장되었습니다!', 'success');
+            
+        } catch (error) {
+            console.error('❌ 결과 저장 실패:', error);
+            this.showNotification('결과 저장에 실패했습니다.', 'error');
+        }
     }
 
     showNotification(message, type = 'info') {
@@ -1014,193 +1191,397 @@ class WiFiInterferenceLab {
     }
 
     updateSpecsSummary() {
-        // Update 2.4GHz summary
-        const power24 = this.router24Power.value;
-        const channel24 = this.router24Channels.options[this.router24Channels.selectedIndex].text;
-        const bandwidth24 = this.router24Bandwidth.value;
-        this.summary24.textContent = `${power24}mW, ${channel24}, ${bandwidth24}MHz`;
-        
-        // Update 5GHz summary
-        const power5 = this.router5Power.value;
-        const channel5 = this.router5Channels.options[this.router5Channels.selectedIndex].text;
-        const bandwidth5 = this.router5Bandwidth.value;
-        this.summary5.textContent = `${power5}mW, ${channel5}, ${bandwidth5}MHz`;
-        
-        // Update antenna summary
-        const antenna = this.routerAntenna.options[this.routerAntenna.selectedIndex].text;
-        this.summaryAntenna.textContent = antenna;
-        
-        // Update location summary
-        const location = this.routerLocation.options[this.routerLocation.selectedIndex].text;
-        const height = this.routerHeight.value;
-        this.summaryLocation.textContent = `${location}, ${height}m 높이`;
+        try {
+            console.log('📋 설정 요약 업데이트 시작...');
+            
+            // DOM 요소 존재 확인
+            if (!this.summary24 || !this.summary5 || !this.summaryAntenna || !this.summaryLocation) {
+                console.error('❌ 요약 DOM 요소가 없습니다:', {
+                    summary24: !!this.summary24,
+                    summary5: !!this.summary5,
+                    summaryAntenna: !!this.summaryAntenna,
+                    summaryLocation: !!this.summaryLocation
+                });
+                return;
+            }
+            
+            // Update 2.4GHz summary
+            if (this.router24Power && this.router24Channels && this.router24Bandwidth) {
+                const power24 = this.router24Power.value;
+                const channel24 = this.router24Channels.options[this.router24Channels.selectedIndex]?.text || '자동';
+                const bandwidth24 = this.router24Bandwidth.value;
+                this.summary24.textContent = `${power24}mW, ${channel24}, ${bandwidth24}MHz`;
+                console.log('📊 2.4GHz 요약 업데이트:', `${power24}mW, ${channel24}, ${bandwidth24}MHz`);
+            }
+            
+            // Update 5GHz summary
+            if (this.router5Power && this.router5Channels && this.router5Bandwidth) {
+                const power5 = this.router5Power.value;
+                const channel5 = this.router5Channels.options[this.router5Channels.selectedIndex]?.text || '자동';
+                const bandwidth5 = this.router5Bandwidth.value;
+                this.summary5.textContent = `${power5}mW, ${channel5}, ${bandwidth5}MHz`;
+                console.log('📊 5GHz 요약 업데이트:', `${power5}mW, ${channel5}, ${bandwidth5}MHz`);
+            }
+            
+            // Update antenna summary
+            if (this.routerAntenna) {
+                const antenna = this.routerAntenna.options[this.routerAntenna.selectedIndex]?.text || '내장';
+                this.summaryAntenna.textContent = antenna;
+                console.log('📊 안테나 요약 업데이트:', antenna);
+            }
+            
+            // Update location summary
+            if (this.routerLocation && this.routerHeight) {
+                const location = this.routerLocation.options[this.routerLocation.selectedIndex]?.text || '거실';
+                const height = this.routerHeight.value;
+                this.summaryLocation.textContent = `${location}, ${height}m 높이`;
+                console.log('📊 위치 요약 업데이트:', `${location}, ${height}m 높이`);
+            }
+            
+            console.log('✅ 설정 요약 업데이트 완료');
+            
+        } catch (error) {
+            console.error('❌ 설정 요약 업데이트 중 에러:', error);
+        }
     }
 
     updateRouterSpecs() {
-        // Update value displays
-        this.router24PowerValue.textContent = `${this.router24Power.value} mW`;
-        this.router5PowerValue.textContent = `${this.router5Power.value} mW`;
-        this.routerHeightValue.textContent = `${this.routerHeight.value} m`;
+        console.log('⚙️ 공유기 스펙 업데이트 시작...');
         
-        // Update dynamic messages
-        this.updateDynamicMessages();
-        
-        // Update summary
-        this.updateSpecsSummary();
-        
-        // If experiment is running, recalculate with new specs
-        if (this.isExperimentRunning) {
+        try {
+            // DOM 요소 존재 확인
+            if (!this.router24Power || !this.router5Power || !this.routerHeight) {
+                console.error('❌ 공유기 스펙 DOM 요소가 없습니다:', {
+                    router24Power: !!this.router24Power,
+                    router5Power: !!this.router5Power,
+                    routerHeight: !!this.routerHeight
+                });
+                return;
+            }
+            
+            console.log('📊 현재 값들:', {
+                router24Power: this.router24Power.value,
+                router5Power: this.router5Power.value,
+                routerHeight: this.routerHeight.value
+            });
+            
+            // Update value displays
+            if (this.router24PowerValue) {
+                this.router24PowerValue.textContent = `${this.router24Power.value} mW`;
+            }
+            if (this.router5PowerValue) {
+                this.router5PowerValue.textContent = `${this.router5Power.value} mW`;
+            }
+            if (this.routerHeightValue) {
+                this.routerHeightValue.textContent = `${this.routerHeight.value} m`;
+            }
+            
+            // Update dynamic messages
+            this.updateDynamicMessages();
+            
+            // Update summary
+            this.updateSpecsSummary();
+            
+            // 항상 계산 업데이트 (실험 중이 아니어도)
+            console.log('🔄 공유기 스펙 변경으로 계산 업데이트');
             this.updateCalculations();
+            
+        } catch (error) {
+            console.error('❌ 공유기 스펙 업데이트 중 에러:', error);
         }
     }
 
     updateBroadbandSpecs() {
-        // Update value displays
-        this.summaryDownload.textContent = `${this.maxDownloadSpeed.value} Mbps`;
-        this.summaryUpload.textContent = `${this.maxUploadSpeed.value} Mbps`;
-        this.summaryInternet.textContent = `${this.internetType.options[this.internetType.selectedIndex].text}`;
+        console.log('🌐 브로드밴드 설정 업데이트 시작...');
+        
+        try {
+            // DOM 요소 존재 확인
+            if (!this.maxDownloadSpeed || !this.maxUploadSpeed || !this.internetType) {
+                console.error('❌ 브로드밴드 DOM 요소가 없습니다:', {
+                    maxDownloadSpeed: !!this.maxDownloadSpeed,
+                    maxUploadSpeed: !!this.maxUploadSpeed,
+                    internetType: !!this.internetType
+                });
+                return;
+            }
+            
+            console.log('📊 현재 브로드밴드 값들:', {
+                maxDownloadSpeed: this.maxDownloadSpeed.value,
+                maxUploadSpeed: this.maxUploadSpeed.value,
+                internetType: this.internetType.options[this.internetType.selectedIndex]?.text
+            });
+            
+            // Update value displays
+            if (this.summaryDownload) {
+                this.summaryDownload.textContent = `${this.maxDownloadSpeed.value} Mbps`;
+            }
+            if (this.summaryUpload) {
+                this.summaryUpload.textContent = `${this.maxUploadSpeed.value} Mbps`;
+            }
+            if (this.summaryInternet) {
+                this.summaryInternet.textContent = `${this.internetType.options[this.internetType.selectedIndex]?.text || '광랜'}`;
+            }
 
-        // Update dynamic messages
-        this.updateDynamicMessages();
+            // Update dynamic messages
+            this.updateDynamicMessages();
 
-        // If experiment is running, recalculate with new specs
-        if (this.isExperimentRunning) {
+            // 항상 계산 업데이트 (실험 중이 아니어도)
+            console.log('🔄 브로드밴드 설정 변경으로 계산 업데이트');
             this.updateCalculations();
+            
+        } catch (error) {
+            console.error('❌ 브로드밴드 설정 업데이트 중 에러:', error);
         }
     }
 
     updateDynamicMessages() {
-        // 2.4GHz Power message
-        const power24 = parseInt(this.router24Power.value);
-        let power24Message = "";
-        if (power24 <= 50) {
-            power24Message = `${power24}mW 설정: 배터리 절약 모드, 간섭 최소화, 범위 제한적`;
-        } else if (power24 <= 100) {
-            power24Message = `${power24}mW 설정: 균형잡힌 성능, 일반적인 가정 환경에 적합`;
-        } else {
-            power24Message = `${power24}mW 설정: 범위 확장, 높은 신호 강도, 간섭 가능성 증가`;
+        try {
+            console.log('💬 동적 메시지 업데이트 시작...');
+            
+            // 2.4GHz Power message
+            if (this.router24Power) {
+                const power24 = parseInt(this.router24Power.value);
+                let power24Message = "";
+                if (power24 <= 50) {
+                    power24Message = `${power24}mW 설정: 배터리 절약 모드, 간섭 최소화, 범위 제한적`;
+                } else if (power24 <= 100) {
+                    power24Message = `${power24}mW 설정: 균형잡힌 성능, 일반적인 가정 환경에 적합`;
+                } else {
+                    power24Message = `${power24}mW 설정: 범위 확장, 높은 신호 강도, 간섭 가능성 증가`;
+                }
+                
+                const power24MessageElement = document.getElementById('power24Message');
+                if (power24MessageElement) {
+                    const messageTextElement = power24MessageElement.querySelector('.message-text');
+                    if (messageTextElement) {
+                        messageTextElement.textContent = power24Message;
+                        console.log('💬 2.4GHz 파워 메시지 업데이트:', power24Message);
+                    }
+                }
+            }
+            
+            // 2.4GHz Channel message
+            if (this.router24Channels) {
+                const channel24 = this.router24Channels.value;
+                let channel24Message = "";
+                if (channel24 === "1") {
+                    channel24Message = "채널 1 선택됨: 다른 2.4GHz 장치와 간섭 최소화, 다만 블루투스와 간섭 가능성";
+                } else if (channel24 === "6") {
+                    channel24Message = "채널 6 선택됨: 다른 2.4GHz 장치와 간섭 최소화, 가장 안정적인 선택";
+                } else if (channel24 === "11") {
+                    channel24Message = "채널 11 선택됨: 다른 2.4GHz 장치와 간섭 최소화, 마이크로웨이브와 간섭 가능성";
+                } else {
+                    channel24Message = "자동 선택: 환경에 따라 최적 채널 자동 선택, 간헐적 채널 변경 가능";
+                }
+                
+                const channel24MessageElement = document.getElementById('channel24Message');
+                if (channel24MessageElement) {
+                    const messageTextElement = channel24MessageElement.querySelector('.message-text');
+                    if (messageTextElement) {
+                        messageTextElement.textContent = channel24Message;
+                        console.log('💬 2.4GHz 채널 메시지 업데이트:', channel24Message);
+                    }
+                }
+            }
+            
+            // 2.4GHz Bandwidth message
+            if (this.router24Bandwidth) {
+                const bandwidth24 = this.router24Bandwidth.value;
+                let bandwidth24Message = "";
+                if (bandwidth24 === "20") {
+                    bandwidth24Message = "20MHz 선택됨: 최대 안정성, 간섭 최소화, 다만 속도 제한적";
+                } else {
+                    bandwidth24Message = "40MHz 선택됨: 속도 향상, 다만 간섭 가능성 증가, 채널 겹침 주의";
+                }
+                
+                const bandwidth24MessageElement = document.getElementById('bandwidth24Message');
+                if (bandwidth24MessageElement) {
+                    const messageTextElement = bandwidth24MessageElement.querySelector('.message-text');
+                    if (messageTextElement) {
+                        messageTextElement.textContent = bandwidth24Message;
+                        console.log('💬 2.4GHz 대역폭 메시지 업데이트:', bandwidth24Message);
+                    }
+                }
+            }
+            
+            // 5GHz Power message
+            if (this.router5Power) {
+                const power5 = parseInt(this.router5Power.value);
+                let power5Message = "";
+                if (power5 <= 100) {
+                    power5Message = `${power5}mW 설정: 5GHz는 낮은 파워로도 충분, 배터리 절약 및 간섭 감소`;
+                } else if (power5 <= 500) {
+                    power5Message = `${power5}mW 설정: 5GHz 표준 파워, 균형잡힌 성능, 대부분 환경에 적합`;
+                } else {
+                    power5Message = `${power5}mW 설정: 5GHz 고파워, 범위 확장 시도, 다만 벽 투과력 한계`;
+                }
+                
+                const power5MessageElement = document.getElementById('power5Message');
+                if (power5MessageElement) {
+                    const messageTextElement = power5MessageElement.querySelector('.message-text');
+                    if (messageTextElement) {
+                        messageTextElement.textContent = power5Message;
+                        console.log('💬 5GHz 파워 메시지 업데이트:', power5Message);
+                    }
+                }
+            }
+            
+            // 5GHz Channel message
+            if (this.router5Channels) {
+                const channel5 = this.router5Channels.value;
+                let channel5Message = "";
+                if (channel5 === "auto") {
+                    channel5Message = "자동 선택: 환경에 따라 최적 채널 자동 선택, DFS 채널 활용 가능";
+                } else if (parseInt(channel5) <= 48) {
+                    channel5Message = `채널 ${channel5} 선택됨: 낮은 주파수, DFS 제한 가능성, 실내 사용 권장`;
+                } else {
+                    channel5Message = `채널 ${channel5} 선택됨: 높은 주파수, DFS 제한 없음, 안정적인 신호 전송`;
+                }
+                
+                const channel5MessageElement = document.getElementById('channel5Message');
+                if (channel5MessageElement) {
+                    const messageTextElement = channel5MessageElement.querySelector('.message-text');
+                    if (messageTextElement) {
+                        messageTextElement.textContent = channel5Message;
+                        console.log('💬 5GHz 채널 메시지 업데이트:', channel5Message);
+                    }
+                }
+            }
+            
+            // 5GHz Bandwidth message
+            if (this.router5Bandwidth) {
+                const bandwidth5 = this.router5Bandwidth.value;
+                let bandwidth5Message = "";
+                if (bandwidth5 === "20") {
+                    bandwidth5Message = "20MHz 선택됨: 최대 안정성, 간섭 최소화, 다만 속도 제한적";
+                } else if (bandwidth5 === "40") {
+                    bandwidth5Message = "40MHz 선택됨: 속도와 안정성의 균형, 중간 환경에 적합";
+                } else if (bandwidth5 === "80") {
+                    bandwidth5Message = "80MHz 선택됨: 속도와 안정성의 균형, 대부분 환경에 적합";
+                } else {
+                    bandwidth5Message = "160MHz 선택됨: 최고 속도, 다만 간섭에 민감, 깨끗한 환경 필요";
+                }
+                
+                const bandwidth5MessageElement = document.getElementById('bandwidth5Message');
+                if (bandwidth5MessageElement) {
+                    const messageTextElement = bandwidth5MessageElement.querySelector('.message-text');
+                    if (messageTextElement) {
+                        messageTextElement.textContent = bandwidth5Message;
+                        console.log('💬 5GHz 대역폭 메시지 업데이트:', bandwidth5Message);
+                    }
+                }
+            }
+            
+            // Antenna message
+            if (this.routerAntenna) {
+                const antenna = this.routerAntenna.options[this.routerAntenna.selectedIndex]?.text || '내장';
+                let antennaMessage = "";
+                if (antenna.includes("내장")) {
+                    antennaMessage = "내장 안테나 선택됨: 기본 성능, 공간 절약, 일반적인 환경에 적합";
+                } else if (antenna.includes("외장") || antenna.includes("3dBi")) {
+                    antennaMessage = "외장 안테나 (3dBi) 선택됨: 균형잡힌 성능, 범위와 안정성 조화";
+                } else if (antenna.includes("고이득") || antenna.includes("6dBi")) {
+                    antennaMessage = "고이득 안테나 (6dBi) 선택됨: 범위 확장, 다만 특정 방향으로 신호 집중";
+                } else {
+                    antennaMessage = "다중 안테나 (2x2) 선택됨: MIMO 기술, 안정성과 속도 향상";
+                }
+                
+                const antennaMessageElement = document.getElementById('antennaMessage');
+                if (antennaMessageElement) {
+                    const messageTextElement = antennaMessageElement.querySelector('.message-text');
+                    if (messageTextElement) {
+                        messageTextElement.textContent = antennaMessage;
+                        console.log('💬 안테나 메시지 업데이트:', antennaMessage);
+                    }
+                }
+            }
+            
+            // Height message
+            if (this.routerHeight) {
+                const height = parseFloat(this.routerHeight.value);
+                let heightMessage = "";
+                if (height <= 1) {
+                    heightMessage = `${height}m 높이: 낮은 설치, 신호 차단 가능성, 다만 안정적인 연결`;
+                } else if (height <= 2) {
+                    heightMessage = `${height}m 높이: 일반적인 가정 환경에 적합, 균형잡힌 신호 분포`;
+                } else {
+                    heightMessage = `${height}m 높이: 높은 설치, 범위 확장, 다만 특정 방향 신호 집중`;
+                }
+                
+                const heightMessageElement = document.getElementById('heightMessage');
+                if (heightMessageElement) {
+                    const messageTextElement = heightMessageElement.querySelector('.message-text');
+                    if (messageTextElement) {
+                        messageTextElement.textContent = heightMessage;
+                        console.log('💬 높이 메시지 업데이트:', heightMessage);
+                    }
+                }
+            }
+            
+            // Location message
+            if (this.routerLocation) {
+                const location = this.routerLocation.options[this.routerLocation.selectedIndex]?.text || '거실';
+                let locationMessage = "";
+                if (location.includes("중앙") || location.includes("거실")) {
+                    locationMessage = "중앙 설치: 균등한 신호 분포, 모든 방에서 안정적인 연결";
+                } else if (location.includes("구석")) {
+                    locationMessage = "구석 설치: 특정 방에 집중된 신호, 벽 반사 효과 활용";
+                } else if (location.includes("벽면")) {
+                    locationMessage = "벽면 설치: 한쪽 방향으로 신호 집중, 다만 반대편 신호 약함";
+                } else if (location.includes("천장")) {
+                    locationMessage = "천장 설치: 전체적인 신호 분포, 다만 설치 복잡성 증가";
+                } else {
+                    locationMessage = "일반 설치: 균형잡힌 신호 분포, 대부분 환경에 적합";
+                }
+                
+                const locationMessageElement = document.getElementById('locationMessage');
+                if (locationMessageElement) {
+                    const messageTextElement = locationMessageElement.querySelector('.message-text');
+                    if (messageTextElement) {
+                        messageTextElement.textContent = locationMessage;
+                        console.log('💬 위치 메시지 업데이트:', locationMessage);
+                    }
+                }
+            }
+            
+            // Broadband dynamic messages
+            this.updateBroadbandMessages();
+            
+            console.log('✅ 동적 메시지 업데이트 완료');
+            
+        } catch (error) {
+            console.error('❌ 동적 메시지 업데이트 중 에러:', error);
         }
-        document.getElementById('power24Message').querySelector('.message-text').textContent = power24Message;
-
-        // 2.4GHz Channel message
-        const channel24 = this.router24Channels.value;
-        let channel24Message = "";
-        if (channel24 === "1") {
-            channel24Message = "채널 1 선택됨: 다른 2.4GHz 장치와 간섭 최소화, 다만 블루투스와 간섭 가능성";
-        } else if (channel24 === "6") {
-            channel24Message = "채널 6 선택됨: 다른 2.4GHz 장치와 간섭 최소화, 가장 안정적인 선택";
-        } else if (channel24 === "11") {
-            channel24Message = "채널 11 선택됨: 다른 2.4GHz 장치와 간섭 최소화, 마이크로웨이브와 간섭 가능성";
-        } else {
-            channel24Message = "자동 선택: 환경에 따라 최적 채널 자동 선택, 간헐적 채널 변경 가능";
-        }
-        document.getElementById('channel24Message').querySelector('.message-text').textContent = channel24Message;
-
-        // 2.4GHz Bandwidth message
-        const bandwidth24 = this.router24Bandwidth.value;
-        let bandwidth24Message = "";
-        if (bandwidth24 === "20") {
-            bandwidth24Message = "20MHz 선택됨: 최대 안정성, 간섭 최소화, 다만 속도 제한적";
-        } else {
-            bandwidth24Message = "40MHz 선택됨: 속도 향상, 다만 간섭 가능성 증가, 채널 겹침 주의";
-        }
-        document.getElementById('bandwidth24Message').querySelector('.message-text').textContent = bandwidth24Message;
-
-        // 5GHz Power message
-        const power5 = parseInt(this.router5Power.value);
-        let power5Message = "";
-        if (power5 <= 100) {
-            power5Message = `${power5}mW 설정: 5GHz는 낮은 파워로도 충분, 배터리 절약 및 간섭 감소`;
-        } else if (power5 <= 500) {
-            power5Message = `${power5}mW 설정: 5GHz 표준 파워, 균형잡힌 성능, 대부분 환경에 적합`;
-        } else {
-            power5Message = `${power5}mW 설정: 5GHz 고파워, 범위 확장 시도, 다만 벽 투과력 한계`;
-        }
-        document.getElementById('power5Message').querySelector('.message-text').textContent = power5Message;
-
-        // 5GHz Channel message
-        const channel5 = this.router5Channels.value;
-        let channel5Message = "";
-        if (channel5 === "auto") {
-            channel5Message = "자동 선택: 환경에 따라 최적 채널 자동 선택, DFS 채널 활용 가능";
-        } else if (parseInt(channel5) <= 48) {
-            channel5Message = `채널 ${channel5} 선택됨: 낮은 주파수, DFS 제한 가능성, 실내 사용 권장`;
-        } else {
-            channel5Message = `채널 ${channel5} 선택됨: 높은 주파수, DFS 제한 없음, 안정적인 신호 전송`;
-        }
-        document.getElementById('channel5Message').querySelector('.message-text').textContent = channel5Message;
-
-        // 5GHz Bandwidth message
-        const bandwidth5 = this.router5Bandwidth.value;
-        let bandwidth5Message = "";
-        if (bandwidth5 === "20") {
-            bandwidth5Message = "20MHz 선택됨: 최대 안정성, 간섭 최소화, 다만 속도 제한적";
-        } else if (bandwidth5 === "40") {
-            bandwidth5Message = "40MHz 선택됨: 속도 향상, 안정성 유지, 대부분 환경에 적합";
-        } else if (bandwidth5 === "80") {
-            bandwidth5Message = "80MHz 선택됨: 속도와 안정성의 균형, 대부분 환경에 적합";
-        } else {
-            bandwidth5Message = "160MHz 선택됨: 최고 속도, 다만 간섭에 민감, 깨끗한 환경 필요";
-        }
-        document.getElementById('bandwidth5Message').querySelector('.message-text').textContent = bandwidth5Message;
-
-        // Antenna message
-        const antenna = this.routerAntenna.value;
-        let antennaMessage = "";
-        if (antenna === "internal") {
-            antennaMessage = "내장 안테나 선택됨: 간섭 최소화, 다만 범위 제한적, 소형 장치에 적합";
-        } else if (antenna === "external") {
-            antennaMessage = "외장 안테나 (3dBi) 선택됨: 균형잡힌 성능, 범위와 안정성 조화, 일반적인 선택";
-        } else {
-            antennaMessage = "고이득 안테나 (6dBi) 선택됨: 범위 확장, 다만 간섭 증가, 넓은 공간에 적합";
-        }
-        document.getElementById('antennaMessage').querySelector('.message-text').textContent = antennaMessage;
-
-        // Height message
-        const height = parseFloat(this.routerHeight.value);
-        let heightMessage = "";
-        if (height <= 1.0) {
-            heightMessage = `${height}m 높이: 특정 구역 집중 신호, 다만 범위 제한적, 작은 공간에 적합`;
-        } else if (height <= 2.0) {
-            heightMessage = `${height}m 높이: 일반적인 가정 환경에 적합, 균형잡힌 신호 분포`;
-        } else {
-            heightMessage = `${height}m 높이: 범위 확장, 전체 공간 커버, 다만 특정 구역 신호 약화 가능`;
-        }
-        document.getElementById('heightMessage').querySelector('.message-text').textContent = heightMessage;
-
-        // Location message
-        const location = this.routerLocation.value;
-        let locationMessage = "";
-        if (location === "center") {
-            locationMessage = "중앙 설치: 균등한 신호 분포, 모든 방에 고른 신호, 다만 벽 반사 효과 제한적";
-        } else if (location === "corner") {
-            locationMessage = "구석 설치: 특정 방에 집중된 신호, 벽 반사 효과 활용, 다만 반대편 신호 약화";
-        } else if (location === "wall") {
-            locationMessage = "벽면 설치: 한쪽 방향 신호 집중, 벽 투과력 향상, 다만 반대편 신호 약화";
-        } else {
-            locationMessage = "천장 설치: 전체 범위 확장, 모든 방에 고른 신호, 다만 설치 및 관리 복잡";
-        }
-        document.getElementById('locationMessage').querySelector('.message-text').textContent = locationMessage;
-        
-        // Broadband dynamic messages
-        this.updateBroadbandMessages();
     }
 
     updateBroadbandMessages() {
-        // Download speed message
-        const downloadSpeed = parseInt(this.maxDownloadSpeed.value);
-        const downloadUnit = this.downloadSpeedUnit.value;
-        let downloadSpeedMessage = "";
-        if (downloadSpeed <= 100) {
-            downloadSpeedMessage = `${downloadSpeed}${downloadUnit} 설정: 기본 인터넷 환경, 웹서핑과 이메일 충분`;
-        } else if (downloadSpeed <= 500) {
-            downloadSpeedMessage = `${downloadSpeed}${downloadUnit} 설정: 중급 인터넷 환경, HD 스트리밍과 온라인 게임 가능`;
-        } else if (downloadSpeed <= 1000) {
-            downloadSpeedMessage = `${downloadSpeed}${downloadUnit} 설정: 기가비트 인터넷 환경, 고속 다운로드와 4K 스트리밍`;
-        } else {
-            downloadSpeedMessage = `${downloadSpeed}${downloadUnit} 설정: 초고속 인터넷 환경, 대용량 파일 전송과 멀티태스킹`;
-        }
-        document.getElementById('downloadSpeedMessage').querySelector('.message-text').textContent = downloadSpeedMessage;
+        try {
+            console.log('💬 브로드밴드 메시지 업데이트 시작...');
+            
+            // Download speed message
+            if (this.maxDownloadSpeed && this.downloadSpeedUnit) {
+                const downloadSpeed = parseInt(this.maxDownloadSpeed.value);
+                const downloadUnit = this.downloadSpeedUnit.options[this.downloadSpeedUnit.selectedIndex]?.text || 'Mbps';
+                let downloadSpeedMessage = "";
+                if (downloadSpeed <= 100) {
+                    downloadSpeedMessage = `${downloadSpeed}${downloadUnit} 설정: 기본 인터넷 환경, 웹서핑과 이메일 충분`;
+                } else if (downloadSpeed <= 500) {
+                    downloadSpeedMessage = `${downloadSpeed}${downloadUnit} 설정: 중급 인터넷 환경, HD 스트리밍과 온라인 게임 가능`;
+                } else if (downloadSpeed <= 1000) {
+                    downloadSpeedMessage = `${downloadSpeed}${downloadUnit} 설정: 기가비트 인터넷 환경, 고속 다운로드와 4K 스트리밍`;
+                } else {
+                    downloadSpeedMessage = `${downloadSpeed}${downloadUnit} 설정: 초고속 인터넷 환경, 대용량 파일 전송과 멀티태스킹`;
+                }
+                
+                const downloadSpeedMessageElement = document.getElementById('downloadSpeedMessage');
+                if (downloadSpeedMessageElement) {
+                    const messageTextElement = downloadSpeedMessageElement.querySelector('.message-text');
+                    if (messageTextElement) {
+                        messageTextElement.textContent = downloadSpeedMessage;
+                        console.log('💬 다운로드 속도 메시지 업데이트:', downloadSpeedMessage);
+                    }
+                }
+            }
 
         // Download stability message
         const downloadStability = this.downloadSpeedStability.value;
@@ -1215,19 +1596,29 @@ class WiFiInterferenceLab {
         document.getElementById('downloadStabilityMessage').querySelector('.message-text').textContent = downloadStabilityMessage;
 
         // Upload speed message
-        const uploadSpeed = parseInt(this.maxUploadSpeed.value);
-        const uploadUnit = this.uploadSpeedUnit.value;
-        let uploadSpeedMessage = "";
-        if (uploadSpeed <= 20) {
-            uploadSpeedMessage = `${uploadSpeed}${uploadUnit} 설정: 기본 업로드 환경, 이메일과 소셜미디어 충분`;
-        } else if (uploadSpeed <= 50) {
-            uploadSpeedMessage = `${uploadSpeed}${uploadUnit} 설정: 중급 업로드 환경, 화상회의와 클라우드 백업 가능`;
-        } else if (uploadSpeed <= 100) {
-            uploadSpeedMessage = `${uploadSpeed}${uploadUnit} 설정: 고속 업로드 환경, 대용량 파일 업로드와 라이브 스트리밍`;
-        } else {
-            uploadSpeedMessage = `${uploadSpeed}${uploadUnit} 설정: 초고속 업로드 환경, 전문가급 콘텐츠 제작과 클라우드 작업`;
+        if (this.maxUploadSpeed && this.uploadSpeedUnit) {
+            const uploadSpeed = parseInt(this.maxUploadSpeed.value);
+            const uploadUnit = this.uploadSpeedUnit.options[this.uploadSpeedUnit.selectedIndex]?.text || 'Mbps';
+            let uploadSpeedMessage = "";
+            if (uploadSpeed <= 20) {
+                uploadSpeedMessage = `${uploadSpeed}${uploadUnit} 설정: 기본 업로드 환경, 이메일과 소셜미디어 충분`;
+            } else if (uploadSpeed <= 50) {
+                uploadSpeedMessage = `${uploadSpeed}${uploadUnit} 설정: 중급 업로드 환경, 화상회의와 클라우드 백업 가능`;
+            } else if (uploadSpeed <= 100) {
+                uploadSpeedMessage = `${uploadSpeed}${uploadUnit} 설정: 고속 업로드 환경, 대용량 파일 업로드와 라이브 스트리밍`;
+            } else {
+                uploadSpeedMessage = `${uploadSpeed}${uploadUnit} 설정: 초고속 업로드 환경, 전문가급 콘텐츠 제작과 클라우드 작업`;
+            }
+            
+            const uploadSpeedMessageElement = document.getElementById('uploadSpeedMessage');
+            if (uploadSpeedMessageElement) {
+                const messageTextElement = uploadSpeedMessageElement.querySelector('.message-text');
+                if (messageTextElement) {
+                    messageTextElement.textContent = uploadSpeedMessage;
+                    console.log('💬 업로드 속도 메시지 업데이트:', uploadSpeedMessage);
+                }
+            }
         }
-        document.getElementById('uploadSpeedMessage').querySelector('.message-text').textContent = uploadSpeedMessage;
 
         // Upload stability message
         const uploadStability = this.uploadSpeedStability.value;
@@ -1266,6 +1657,12 @@ class WiFiInterferenceLab {
             congestionMessage = "높은 혼잡도: 속도 저하 가능, 다만 대부분 서비스 정상 이용 가능";
         }
         document.getElementById('congestionMessage').querySelector('.message-text').textContent = congestionMessage;
+        
+        console.log('✅ 브로드밴드 메시지 업데이트 완료');
+        
+        } catch (error) {
+            console.error('❌ 브로드밴드 메시지 업데이트 중 에러:', error);
+        }
     }
 
     handleFileSelection(event) {
@@ -1585,6 +1982,55 @@ class WiFiInterferenceLab {
             setTimeout(() => document.body.removeChild(hint), 300);
         }, 3000);
     }
+    
+
+    
+
+    
+    initializeZoomAndResize() {
+        console.log('🔄 Zoom functionality removed');
+    }
+    
+    forceChartInitialization() {
+        console.log('🚀 강력한 차트 초기화 시작...');
+        
+        // Canvas 상태 확인
+        if (!this.canvas || !this.ctx) {
+            console.log('⚠️ Canvas not ready, retrying...');
+            setTimeout(() => this.forceChartInitialization(), 200);
+            return;
+        }
+        
+        console.log('✅ Canvas ready, dimensions:', this.canvas.width, 'x', this.canvas.height);
+        
+        // 초기 차트 그리기
+        try {
+            this.drawInitialChart();
+            console.log('✅ 초기 차트 그리기 완료');
+            
+            // 테스트 데이터 추가
+            this.addTestData();
+            console.log('✅ 테스트 데이터 추가 완료');
+            
+        } catch (error) {
+            console.error('❌ 차트 초기화 실패:', error);
+        }
+    }
+    
+    addTestData() {
+        // 테스트용 데이터 생성 (사인파)
+        for (let i = 0; i < 50; i++) {
+            const time = i * 0.1;
+            const rssi = -60 + Math.sin(time * 0.5) * 20; // -40 ~ -80 dBm 범위
+            this.chartData.push({ time, rssi });
+        }
+        
+        // 차트 업데이트
+        this.updateCanvasChart();
+        console.log('📊 테스트 데이터로 차트 업데이트 완료');
+    }
+    
+
 }
 
 // 페이지 로드 시 앱 초기화

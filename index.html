@@ -287,7 +287,7 @@
                                             <span class="message-icon">💡</span>
                                             <span class="message-text">광케이블 선택: 최고 속도와 안정성, 낮은 지연시간</span>
                                         </div>
-                                    </div>
+                                    </div>  
                                     <div class="broadband-item">
                                         <label for="networkCongestion">네트워크 혼잡도:</label>
                                         <select id="networkCongestion">
@@ -303,29 +303,55 @@
                                 </div>
                             </div>
 
-                            <div class="broadband-summary">
+                            <!-- 브로드밴드 설정 요약 -->
+                            <section class="broadband-summary">
                                 <h3>📊 브로드밴드 설정 요약</h3>
                                 <div class="summary-grid">
                                     <div class="summary-item">
-                                        <span class="label">다운로드:</span>
-                                        <span class="value" id="summaryDownload">1000 Mbps (안정적)</span>
+                                        <span class="summary-label">다운로드:</span>
+                                        <span class="summary-value" id="summaryDownload">1000 Mbps (안정적)</span>
                                     </div>
                                     <div class="summary-item">
-                                        <span class="label">업로드:</span>
-                                        <span class="value" id="summaryUpload">100 Mbps (안정적)</span>
+                                        <span class="summary-label">업로드:</span>
+                                        <span class="summary-value" id="summaryUpload">100 Mbps (안정적)</span>
                                     </div>
                                     <div class="summary-item">
-                                        <span class="label">인터넷:</span>
-                                        <span class="value" id="summaryInternet">광케이블 (낮은 혼잡도)</span>
+                                        <span class="summary-label">인터넷:</span>
+                                        <span class="summary-value" id="summaryInternet">광케이블 (낮은 혼잡도)</span>
                                     </div>
                                 </div>
-                            </div>
+                            </section>
                         </div>
+                    </section>
+
+                    <!-- 결과 불러오기 섹션 -->
+                    <section class="json-import-section">
+                        <h3>📁 결과 불러오기 옵션</h3>
+                        <div class="import-options">
+                            <label>
+                                <input type="checkbox" id="overwriteCurrent" checked>
+                                현재 설정 덮어쓰기
+                            </label>
+                            <label>
+                                <input type="checkbox" id="loadChartData" checked>
+                                차트 데이터 불러오기
+                            </label>
+                            <label>
+                                <input type="checkbox" id="loadRouterSpecs" checked>
+                                공유기 스펙 불러오기
+                            </label>
+                            <label>
+                                <input type="checkbox" id="loadBroadbandSpecs" checked>
+                                브로드밴드 설정 불러오기
+                            </label>
+                        </div>
+                        <div class="import-status" id="importStatus"></div>
                     </section>
                 </div>
             </div>
         </div>
 
+        <!-- WiFi 기본 지식 섹션 -->
         <div class="knowledge-section">
             <h2>📚 WiFi 기본 지식</h2>
             <div class="knowledge-grid">
@@ -349,6 +375,7 @@
             </div>
         </div>
 
+        <!-- 실험 설정 섹션 -->
         <div class="experiment-section">
             <h2>🧪 실험 설정</h2>
             
@@ -427,10 +454,9 @@
             <div class="action-buttons">
                 <button id="saveResults" class="btn-success">결과 저장</button>
             </div>
-
-
         </div>
 
+        <!-- 실험 결과 섹션 -->
         <div class="results-section">
             <h2>📊 실험 결과</h2>
             
@@ -470,42 +496,15 @@
 
             <div class="real-time-graph">
                 <h3>실시간 신호 변화</h3>
-                <div class="chart-container">
-                    <canvas id="signalChart"></canvas>
-                </div>
-            </div>
+                <canvas id="signalChart"></canvas>
+                
 
-            <!-- 결과 불러오기 섹션 -->
-            <div class="json-import-section">
-                <h3>📁 결과 불러오기 (JSON)</h3>
-                <div class="file-upload-area">
-                    <input type="file" id="jsonFileInput" accept=".json" style="display: none;">
-                    <button id="selectJsonFile" class="btn-secondary">JSON 파일 선택</button>
-                    <span id="selectedFileName" class="file-name">파일을 선택해주세요</span>
-                </div>
-                <div class="import-options">
-                    <label>
-                        <input type="checkbox" id="overwriteCurrent" checked>
-                        현재 설정 덮어쓰기
-                    </label>
-                    <label>
-                        <input type="checkbox" id="loadChartData" checked>
-                        차트 데이터 불러오기
-                    </label>
-                    <label>
-                        <input type="checkbox" id="loadRouterSpecs" checked>
-                        공유기 스펙 불러오기
-                    </label>
-                    <label>
-                        <input type="checkbox" id="loadBroadbandSpecs" checked>
-                        브로드밴드 설정 불러오기
-                    </label>
-                </div>
-                <button id="loadJsonResults" class="btn-primary" disabled>결과 불러오기</button>
-                <div id="importStatus" class="import-status"></div>
+                
+
             </div>
         </div>
 
+        <!-- 사용 가이드 섹션 -->
         <div class="guide-section">
             <h2>📖 사용 가이드</h2>
             <div class="guide-content">
@@ -532,6 +531,7 @@
             </div>
         </div>
 
+        <!-- 2.4GHz vs 5GHz 상세 비교 섹션 -->
         <div class="comparison-section">
             <h2>🔍 2.4GHz vs 5GHz 상세 비교</h2>
             <div class="comparison-table">
@@ -617,8 +617,8 @@
         </div>
     </footer>
 
-    <!-- Chart.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chart.js CDN 제거 - 순수 JavaScript로 차트 구현 -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> -->
     
     <!-- WiFi Interference Lab JavaScript -->
     <script src="script.js"></script>
