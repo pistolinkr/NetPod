@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WiFi 간섭 실험실</title>
+    <title>NetPod</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>🌐 WiFi 간섭 실험실</h1>
+            <h1>🌐 NetPod</h1>
             <p>2.4GHz vs 5GHz 대역대 간섭 현상 시뮬레이션</p>
         </header>
 
@@ -35,6 +35,118 @@
                 </div>
             </div>
         </div>
+
+        <section class="router-specs">
+            <div class="container">
+                <h2>�� 공유기 기본 스펙 설정</h2>
+                <div class="specs-grid">
+                    <div class="spec-group">
+                        <h3>�� 2.4GHz 대역 설정</h3>
+                        <div class="spec-item">
+                            <label for="router24Power">전송 파워 (mW):</label>
+                            <input type="range" id="router24Power" min="1" max="200" value="100" step="1">
+                            <span class="value-display" id="router24PowerValue">100 mW</span>
+                        </div>
+                        <div class="spec-item">
+                            <label for="router24Channels">사용 채널:</label>
+                            <select id="router24Channels">
+                                <option value="1">1번 채널 (2.412 GHz)</option>
+                                <option value="6" selected>6번 채널 (2.437 GHz) - 권장</option>
+                                <option value="11">11번 채널 (2.462 GHz)</option>
+                                <option value="auto">자동 선택</option>
+                            </select>
+                        </div>
+                        <div class="spec-item">
+                            <label for="router24Bandwidth">대역폭:</label>
+                            <select id="router24Bandwidth">
+                                <option value="20">20 MHz</option>
+                                <option value="40" selected>40 MHz</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="spec-group">
+                        <h3>📡 5GHz 대역 설정</h3>
+                        <div class="spec-item">
+                            <label for="router5Power">전송 파워 (mW):</label>
+                            <input type="range" id="router5Power" min="1" max="1000" value="200" step="10">
+                            <span class="value-display" id="router5PowerValue">200 mW</span>
+                        </div>
+                        <div class="spec-item">
+                            <label for="router5Channels">사용 채널:</label>
+                            <select id="router5Channels">
+                                <option value="36">36번 채널 (5.180 GHz)</option>
+                                <option value="40">40번 채널 (5.200 GHz)</option>
+                                <option value="44">44번 채널 (5.220 GHz)</option>
+                                <option value="48">48번 채널 (5.240 GHz)</option>
+                                <option value="149" selected>149번 채널 (5.745 GHz) - 권장</option>
+                                <option value="153">153번 채널 (5.765 GHz)</option>
+                                <option value="157">157번 채널 (5.785 GHz)</option>
+                                <option value="161">161번 채널 (5.805 GHz)</option>
+                                <option value="auto">자동 선택</option>
+                            </select>
+                        </div>
+                        <div class="spec-item">
+                            <label for="router5Bandwidth">대역폭:</label>
+                            <select id="router5Bandwidth">
+                                <option value="20">20 MHz</option>
+                                <option value="40">40 MHz</option>
+                                <option value="80" selected>80 MHz</option>
+                                <option value="160">160 MHz</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="spec-group">
+                        <h3>🏠 환경 설정</h3>
+                        <div class="spec-item">
+                            <label for="routerAntenna">안테나 타입:</label>
+                            <select id="routerAntenna">
+                                <option value="internal">내장 안테나</option>
+                                <option value="external" selected>외장 안테나 (3dBi)</option>
+                                <option value="highgain">고이득 안테나 (6dBi)</option>
+                            </select>
+                        </div>
+                        <div class="spec-item">
+                            <label for="routerHeight">설치 높이 (m):</label>
+                            <input type="range" id="routerHeight" min="0.5" max="3.0" value="1.5" step="0.1">
+                            <span class="value-display" id="routerHeightValue">1.5 m</span>
+                        </div>
+                        <div class="spec-item">
+                            <label for="routerLocation">설치 위치:</label>
+                            <select id="routerLocation">
+                                <option value="center">방 중앙</option>
+                                <option value="corner" selected>구석</option>
+                                <option value="wall">벽면</option>
+                                <option value="ceiling">천장</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="specs-summary">
+                    <h3>📊 현재 설정 요약</h3>
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <span class="label">2.4GHz:</span>
+                            <span class="value" id="summary24">100mW, 채널6, 40MHz</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">5GHz:</span>
+                            <span class="value" id="summary5">200mW, 채널149, 80MHz</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">안테나:</span>
+                            <span class="value" id="summaryAntenna">외장 안테나 (3dBi)</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">설치:</span>
+                            <span class="value" id="summaryLocation">구석, 1.5m 높이</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
 
         <div class="experiment-section">
             <h2>🧪 실험 설정</h2>
@@ -236,6 +348,43 @@
             </div>
         </div>
     </div>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>🌐 NetPod</h3>
+                <p>WiFi 간섭 현상 시뮬레이션 및 학습 플랫폼</p>
+            </div>
+            <div class="footer-section">
+                <h3>🔗 Git Repository</h3>
+                <div class="git-shortcuts">
+                    <a href="https://github.com/pistolinkr/NetPod" target="_blank" class="git-btn">
+                        <span>📁 Repository</span>
+                    </a>
+                    <a href="https://github.com/pistolinkr/NetPod/issues" target="_blank" class="git-btn">
+                        <span>🐛 Issues</span>
+                    </a>
+                    <a href="https://github.com/pistolinkr/NetPod/pulls" target="_blank" class="git-btn">
+                        <span>🔀 Pull Requests</span>
+                    </a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h3>📧 Contact</h3>
+                <div class="contact-info">
+                    <a href="mailto:pistolinkr@icloud.com" class="contact-btn email-btn">
+                        <span>📧 pistolinkr@icloud.com</span>
+                    </a>
+                    <a href="https://github.com/pistolinkr" target="_blank" class="contact-btn github-btn">
+                        <span>🐙 GitHub Profile</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 NetPod. Made with ❤️ for WiFi enthusiasts.</p>
+        </div>
+    </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="script.js"></script>
