@@ -704,11 +704,23 @@ header p {
     .btn-primary, .btn-secondary, .btn-success {
         width: 100%;
         max-width: 300px;
+        min-height: 44px; /* 터치하기 쉬운 최소 높이 */
+        font-size: 16px; /* 모바일에서 읽기 쉬운 폰트 크기 */
+    }
+    
+    .nav-btn {
+        min-height: 44px; /* 터치하기 쉬운 최소 높이 */
+        font-size: 14px;
+    }
+    
+    .settings-button {
+        min-height: 44px;
+        font-size: 20px;
     }
     
     #signalChart {
         width: 100%;
-        height: 150px;
+        height: 300px;
         z-index: 1000;
     }
 
@@ -753,11 +765,55 @@ header p {
     .speed-input-group select {
         min-width: auto;
     }
+    
+    .settings-button-container {
+        top: 90px;
+        right: 20px;
+        width: 55px;
+        height: 55px;
+    }
+    
+    .settings-modal {
+        margin: 20px;
+        max-height: calc(100vh - 40px);
+    }
+    
+    .settings-modal-body {
+        padding: 25px;
+    }
+    
+    .real-time-graph {
+        padding: 25px;
+    }
+    
+    .real-time-graph h3 {
+        font-size: 1.4rem;
+        margin-bottom: 20px;
+    }
 }
 
 @media (max-width: 480px) {
     header {
-        padding: 20px;
+        padding: 15px;
+    }
+    
+    .nav-header-fixed {
+        height: 50px;
+        padding: 0 15px;
+    }
+    
+    .nav-controls {
+        gap: 8px;
+    }
+    
+    .nav-btn {
+        padding: 8px 12px;
+        font-size: 12px;
+        min-width: 80px;
+    }
+    
+    .main-content {
+        margin-top: 50px;
     }
     
     .knowledge-section,
@@ -765,11 +821,148 @@ header p {
     .results-section,
     .guide-section,
     .comparison-section {
-        padding: 20px;
+        padding: 15px;
+        margin-bottom: 20px;
     }
     
     .control-group {
         margin-bottom: 15px;
+    }
+    
+    .settings-button-container {
+        top: 70px;
+        right: 15px;
+        width: 50px;
+        height: 50px;
+    }
+    
+    .settings-button {
+        font-size: 18px;
+    }
+    
+    .settings-modal {
+        margin: 10px;
+        max-height: calc(100vh - 20px);
+        width: calc(100vw - 20px);
+        max-width: none;
+    }
+    
+    .settings-modal-body {
+        padding: 15px;
+        max-height: calc(100vh - 60px);
+        overflow-y: auto;
+    }
+    
+    .settings-modal h2 {
+        font-size: 1.3rem;
+        margin-bottom: 15px;
+    }
+    
+    .settings-modal h3 {
+        font-size: 1.1rem;
+        margin-bottom: 10px;
+    }
+    
+    .specs-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .broadband-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    #signalChart {
+        width: 100%;
+        height: 200px;
+    }
+    
+    .real-time-graph {
+        padding: 15px;
+    }
+    
+    .real-time-graph h3 {
+        font-size: 1.2rem;
+        margin-bottom: 15px;
+    }
+}
+
+@media (max-width: 320px) {
+    .nav-header-fixed {
+        height: 45px;
+        padding: 0 10px;
+    }
+    
+    .nav-controls {
+        gap: 6px;
+    }
+    
+    .nav-btn {
+        padding: 6px 10px;
+        font-size: 11px;
+        min-width: 70px;
+    }
+    
+    .main-content {
+        margin-top: 45px;
+    }
+    
+    .knowledge-section,
+    .experiment-section,
+    .results-section,
+    .guide-section,
+    .comparison-section {
+        padding: 10px;
+        margin-bottom: 15px;
+    }
+    
+    .settings-button-container {
+        top: 60px;
+        right: 10px;
+        width: 45px;
+        height: 45px;
+    }
+    
+    .settings-button {
+        font-size: 16px;
+    }
+    
+    .settings-modal {
+        margin: 5px;
+        max-height: calc(100vh - 10px);
+    }
+    
+    .settings-modal-body {
+        padding: 10px;
+    }
+    
+    .specs-grid,
+    .broadband-grid {
+        gap: 10px;
+    }
+    
+    #signalChart {
+        height: 150px;
+    }
+    
+    .real-time-graph {
+        padding: 10px;
+    }
+    
+    .real-time-graph h3 {
+        font-size: 1.1rem;
+        margin-bottom: 10px;
+    }
+    
+    .control-group label {
+        font-size: 14px;
+    }
+    
+    .control-group input,
+    .control-group select {
+        font-size: 14px;
+        padding: 8px;
     }
 }
 
@@ -1490,6 +1683,56 @@ header p {
     
     .logo-text p {
         font-size: 0.8rem;
+    }
+    
+    .nav-header-fixed {
+        height: 55px;
+        padding: 0 15px;
+    }
+    
+    .nav-controls {
+        gap: 10px;
+    }
+    
+    .nav-btn {
+        padding: 6px 10px;
+        font-size: 0.75rem;
+        min-width: 85px;
+    }
+    
+    .main-content {
+        margin-top: 55px;
+    }
+    
+    .settings-button-container {
+        top: 80px;
+        right: 20px;
+        width: 55px;
+        height: 55px;
+    }
+    
+    .settings-modal {
+        margin: 15px;
+        max-height: calc(100vh - 30px);
+    }
+    
+    .settings-modal-body {
+        padding: 20px;
+    }
+    
+    .specs-grid,
+    .broadband-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+    
+    #signalChart {
+        width: 100%;
+        height: 400px;
+    }
+    
+    .real-time-graph {
+        padding: 20px;
     }
 }
 
