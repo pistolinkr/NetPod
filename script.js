@@ -11,12 +11,16 @@ class WiFiInterferenceLab {
         this.initializeElements();
         this.bindEvents();
         this.initializeChart();
-        this.loadDefaultValues();
         
-        // Update specs summary and dynamic messages initially
-        this.updateSpecsSummary();
-        this.updateDynamicMessages();
-        this.updateBroadbandMessages();
+        // 차트 초기화 완료 후 데이터 추가를 위한 지연
+        setTimeout(() => {
+            this.loadDefaultValues();
+            
+            // Update specs summary and dynamic messages initially
+            this.updateSpecsSummary();
+            this.updateDynamicMessages();
+            this.updateBroadbandMessages();
+        }, 200); // 차트 초기화를 위한 충분한 시간
         
         // Initialize drag and drop for settings button
         this.initializeDragAndDrop();
@@ -233,171 +237,223 @@ class WiFiInterferenceLab {
     }
 
     initializeChart() {
-        console.log('Initializing chart...');
-        
-        const ctx = this.elements.signalChart.getContext('2d');
-        
-        if (!ctx) {
-            console.error('Failed to get canvas context!');
-            return;
-        }
-        
-        console.log('Canvas context obtained successfully');
-        
         // Chart.js가 로드되었는지 확인
         if (typeof Chart === 'undefined') {
-            console.error('Chart.js is not loaded!');
+            console.error('Chart.js is not loaded! Please check if Chart.js is included in the HTML.');
+            this.showChartError('Chart.js가 로드되지 않았습니다. HTML에 Chart.js 스크립트를 포함해주세요.');
             return;
         }
-        
-        console.log('Chart.js is available, creating chart...');
-        
-        // Chart.js 설정
-        this.chart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: [],
-                datasets: [{
-                    label: 'RSSI (dBm)',
-                    data: [],
-                    borderColor: '#000000',
-                    backgroundColor: 'rgba(0, 0, 0, 0.05)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.4,
-                    pointRadius: 4,
-                    pointBackgroundColor: '#000000',
-                    pointBorderColor: '#ffffff',
-                    pointBorderWidth: 1,
-                    pointHoverRadius: 6,
-                    pointHoverBorderWidth: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                animation: {
-                    duration: 300,
-                    easing: 'easeInOutQuart'
-                },
-                scales: {
-                    y: {
-                        beginAtZero: false,
-                        min: -100,
-                        max: -30,
-                        grid: {
-                            color: '#e0e0e0',
-                            lineWidth: 1
-                        },
-                        ticks: {
-                            color: '#666666',
-                            font: {
-                                size: 11
-                            },
-                            stepSize: 10
-                        },
-                        title: {
-                            display: true,
-                            text: 'RSSI (dBm)',
-                            color: '#000000',
-                            font: {
-                                size: 13,
-                                weight: '600'
-                            }
-                        }
-                    },
-                    x: {
-                        grid: {
-                            color: '#e0e0e0',
-                            lineWidth: 1
-                        },
-                        ticks: {
-                            color: '#666666',
-                            font: {
-                                size: 11
-                            },
-                            maxTicksLimit: 15
-                        },
-                        title: {
-                            display: true,
-                            text: '시간 (초)',
-                            color: '#000000',
-                            font: {
-                                size: 13,
-                                weight: '600'
-                            }
-                        }
-                    }
-                },
-                plugins: {
-                    legend: {
-                        display: true,
-                        labels: {
-                            color: '#000000',
-                            font: {
-                                size: 12,
-                                weight: '500'
-                            }
-                        }
-                    },
-                    tooltip: {
-                        backgroundColor: '#ffffff',
-                        titleColor: '#000000',
-                        bodyColor: '#000000',
+
+        // Canvas 요소 찾기
+        const canvas = document.getElementById('signalChart');
+        if (!canvas) {
+            console.error('Signal chart canvas not found!');
+            this.showChartError('차트 캔버스를 찾을 수 없습니다.');
+            return;
+        }
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+            console.error('Failed to get canvas context!');
+            this.showChartError('캔버스 컨텍스트를 가져올 수 없습니다.');
+            return;
+        }
+
+        console.log('Canvas found, dimensions:', canvas.offsetWidth, 'x', canvas.offsetHeight);
+
+        try {
+            // Chart.js 설정
+            this.chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'RSSI (dBm)',
+                        data: [],
                         borderColor: '#000000',
-                        borderWidth: 1,
-                        cornerRadius: 4,
-                        displayColors: false,
-                        callbacks: {
-                            label: function(context) {
-                                return `RSSI: ${context.parsed.y.toFixed(1)} dBm`;
+                        backgroundColor: 'rgba(0, 0, 0, 0.05)', // Lighter fill
+                        borderWidth: 2, // Thinner line
+                        fill: true, // Fill area below line
+                        tension: 0.4, // Smoother curve
+                        pointRadius: 4, // Smaller points
+                        pointBackgroundColor: '#000000',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 1,
+                        pointHoverRadius: 6,
+                        pointHoverBorderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 300, // Faster animation
+                        easing: 'easeInOutQuart'
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            min: -100,
+                            max: -30,
+                            grid: {
+                                color: '#e0e0e0', // Lighter grid
+                                lineWidth: 1
+                            },
+                            ticks: {
+                                color: '#666666', // Lighter ticks
+                                font: {
+                                    size: 11 // Smaller font
+                                },
+                                stepSize: 10
+                            },
+                            title: {
+                                display: true,
+                                text: 'RSSI (dBm)',
+                                color: '#000000',
+                                font: {
+                                    size: 13, // Smaller font
+                                    weight: '600' // Lighter weight
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: '#e0e0e0', // Lighter grid
+                                lineWidth: 1
+                            },
+                            ticks: {
+                                color: '#666666', // Lighter ticks
+                                font: {
+                                    size: 11 // Smaller font
+                                },
+                                maxTicksLimit: 15 // Fewer ticks
+                            },
+                            title: {
+                                display: true,
+                                text: '시간 (초)',
+                                color: '#000000',
+                                font: {
+                                    size: 13, // Smaller font
+                                    weight: '600' // Lighter weight
+                                }
                             }
                         }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                color: '#000000',
+                                font: {
+                                    size: 12,
+                                    weight: '500' // Added weight
+                                }
+                            }
+                        },
+                        tooltip: { // Re-added tooltip
+                            backgroundColor: '#ffffff',
+                            titleColor: '#000000',
+                            bodyColor: '#000000',
+                            borderColor: '#000000',
+                            borderWidth: 1,
+                            cornerRadius: 4,
+                            displayColors: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return `RSSI: ${context.parsed.y.toFixed(1)} dBm`;
+                                }
+                            }
+                        }
+                    },
+                    interaction: { // Re-added interaction
+                        intersect: false,
+                        mode: 'index'
                     }
-                },
-                interaction: {
-                    intersect: false,
-                    mode: 'index'
                 }
+            });
+
+            console.log('Chart initialized successfully, chart object:', this.chart);
+            
+            // 차트가 제대로 생성되었는지 확인
+            if (this.chart && this.chart.data && this.chart.data.datasets) {
+                console.log('Chart verification successful, datasets:', this.chart.data.datasets.length);
+                // 초기 데이터 추가 (빈 차트 방지)
+                this.addInitialChartData();
+            } else {
+                console.error('Chart verification failed!');
             }
-        });
+            
+        } catch (error) {
+            console.error('Error initializing chart:', error);
+            this.showChartError(`차트 초기화 오류: ${error.message}`);
+        }
+    }
+
+    // 차트 에러 표시
+    showChartError(message) {
+        const chartContainer = document.querySelector('.chart-container');
+        if (chartContainer) {
+            chartContainer.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: #666; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px;">
+                    <div style="font-size: 24px; margin-bottom: 10px;">⚠️</div>
+                    <div style="font-size: 16px; margin-bottom: 10px; font-weight: 600;">차트를 불러올 수 없습니다</div>
+                    <div style="font-size: 14px; color: #888;">${message}</div>
+                    <button onclick="location.reload()" style="margin-top: 20px; padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">페이지 새로고침</button>
+                </div>
+            `;
+        }
+    }
+
+    // 초기 차트 데이터 추가 (빈 차트 방지)
+    addInitialChartData() {
+        if (!this.chart) return;
         
-        console.log('Chart created successfully');
+        // 기존 데이터 초기화
+        this.chartData = [];
+        
+        // 샘플 데이터 생성 (100개 포인트로 증가)
+        for (let i = 0; i < 100; i++) {
+            const time = i;
+            const baseRSSI = -60; // 기본 RSSI 값
+            
+            // 더 명확한 사인파 패턴 생성
+            const sineVariation = Math.sin(i * 0.3) * 15; // 진폭 증가, 주기 조정
+            const cosineVariation = Math.cos(i * 0.15) * 8; // 코사인 변동
+            const noiseVariation = (Math.random() - 0.5) * 3; // 노이즈 증가
+            
+            let rssi = baseRSSI + sineVariation + cosineVariation + noiseVariation;
+            rssi = Math.max(-100, Math.min(-30, rssi));
+            
+            this.chartData.push({ time, rssi });
+        }
+        
+        this.updateChart();
+        console.log('Initial chart data added:', this.chartData.length, 'points');
+        
+        // 차트가 제대로 표시되는지 확인
+        if (this.chart && this.chart.data && this.chart.data.datasets[0].data.length > 0) {
+            console.log('Chart data verified:', this.chart.data.datasets[0].data.length, 'points');
+        } else {
+            console.error('Chart data verification failed!');
+        }
     }
 
     loadDefaultValues() {
         // 기본값으로 계산 실행
         this.updateCalculations();
         
-        // 초기 차트 데이터 추가 (차트가 보이도록)
-        this.addInitialChartData();
-    }
-
-    addInitialChartData() {
-        // 초기 차트 데이터 생성 (사인파 패턴)
-        this.chartData = [];
-        this.currentTime = 0;
-        
-        for (let i = 0; i < 50; i++) {
-            let time = i;
-            let baseRSSI = -50; // 기본 RSSI 값
-            let sineVariation = Math.sin(time * 0.2) * 8;
-            let cosineVariation = Math.cos(time * 0.1) * 5;
-            let noiseVariation = (Math.random() - 0.5) * 2;
-            
-            let enhancedRSSI = baseRSSI + sineVariation + cosineVariation + noiseVariation;
-            enhancedRSSI = Math.max(-100, Math.min(-30, enhancedRSSI));
-            
-            this.chartData.push({
-                time: time,
-                rssi: enhancedRSSI
-            });
-        }
-        
-        // 차트 업데이트
-        if (this.chart) {
-            this.updateChart();
-            console.log('Initial chart data added:', this.chartData.length, 'points');
+        // 차트가 완전히 초기화되었는지 확인 후 초기 데이터 추가
+        if (this.chart && this.chart.data && this.chart.data.datasets) {
+            console.log('Chart is ready, adding initial data...');
+            if (this.chartData.length === 0) {
+                this.addInitialChartData();
+            }
+        } else {
+            console.log('Chart not ready yet, waiting...');
+            // 차트가 준비되지 않았다면 다시 시도
+            setTimeout(() => {
+                this.loadDefaultValues();
+            }, 100);
         }
     }
 
@@ -433,21 +489,39 @@ class WiFiInterferenceLab {
     }
 
     updateChart() {
-        if (!this.chart || !this.chartData || this.chartData.length === 0) {
-            console.log('Chart or data not available for update');
+        if (!this.chart) {
+            console.error('Chart is not initialized!');
+            return;
+        }
+        
+        if (!this.chartData || this.chartData.length === 0) {
+            console.log('No chart data available for update');
             return;
         }
         
         console.log('Updating chart with', this.chartData.length, 'data points');
         
-        // 차트 데이터 업데이트
-        this.chart.data.labels = this.chartData.map(point => point.time);
-        this.chart.data.datasets[0].data = this.chartData.map(point => point.rssi);
-        
-        // 차트 업데이트
-        this.chart.update('none');
-        
-        console.log('Chart updated successfully');
+        try {
+            // 차트 데이터 업데이트
+            this.chart.data.labels = this.chartData.map(point => point.time);
+            this.chart.data.datasets[0].data = this.chartData.map(point => point.rssi);
+            
+            // 차트 업데이트 (애니메이션 없이)
+            this.chart.update('none');
+            
+            console.log('Chart updated successfully with', this.chart.data.datasets[0].data.length, 'points');
+            
+            // 차트 컨테이너가 보이는지 확인
+            const chartContainer = document.querySelector('.chart-container');
+            if (chartContainer) {
+                console.log('Chart container found, dimensions:', chartContainer.offsetWidth, 'x', chartContainer.offsetHeight);
+            } else {
+                console.error('Chart container not found!');
+            }
+            
+        } catch (error) {
+            console.error('Error updating chart:', error);
+        }
     }
 
     calculateBaseRSSI(frequency, distance, walls, power) {
@@ -618,13 +692,38 @@ class WiFiInterferenceLab {
         let interferenceText = interference < 20 ? '낮음' : interference < 50 ? '보통' : interference < 80 ? '높음' : '매우 높음';
         this.elements.interferenceIndex.textContent = interferenceText;
         
-        // 실험 중일 때만 차트 데이터 추가 (중복 방지)
+        // 차트 데이터 추가 - 차트 상태를 안전하게 확인
         if (this.isExperimentRunning) {
             this.addChartData(rssi);
+        } else if (this.chartData.length === 0 && this.chart && this.chart.data) {
+            // 실험 중이 아니고 차트 데이터가 없으며 차트가 준비된 경우에만 초기 데이터 생성
+            console.log('Adding initial chart data in updateUI...');
+            this.addInitialChartData();
         }
     }
 
     addChartData(rssi) {
+        // 차트가 준비되지 않았으면 데이터만 저장하고 차트 업데이트는 하지 않음
+        if (!this.chart || !this.chart.data || !this.chart.data.datasets) {
+            console.log('Chart not ready, storing data only');
+            // 데이터는 저장
+            let time = this.currentTime;
+            let sineVariation = Math.sin(time * 0.2) * 8;
+            let cosineVariation = Math.cos(time * 0.1) * 5;
+            let noiseVariation = (Math.random() - 0.5) * 2;
+            
+            let enhancedRSSI = rssi + sineVariation + cosineVariation + noiseVariation;
+            enhancedRSSI = Math.max(-100, Math.min(-30, enhancedRSSI));
+            
+            this.chartData.push({ time, rssi: enhancedRSSI });
+            
+            // 최근 100개 데이터만 유지
+            if (this.chartData.length > 100) {
+                this.chartData.shift();
+            }
+            return;
+        }
+        
         // 더 부드러운 사인파 패턴을 위한 데이터 생성
         let time = this.currentTime;
         
@@ -669,9 +768,20 @@ class WiFiInterferenceLab {
     startExperiment() {
         console.log('Starting experiment...');
         this.isExperimentRunning = true;
-        this.elements.startExperiment.textContent = '실험 중지';
-        this.elements.startExperiment.classList.remove('btn-primary');
-        this.elements.startExperiment.classList.add('btn-secondary');
+        
+        // 네비게이션 버튼 업데이트
+        if (this.navStartExperiment) {
+            this.navStartExperiment.innerHTML = '<span class="btn-icon">⏸️</span><span class="btn-text">실험 중지</span>';
+            this.navStartExperiment.classList.remove('nav-btn-primary');
+            this.navStartExperiment.classList.add('nav-btn-secondary');
+        }
+        
+        // 기존 버튼 업데이트 (아직 남아있다면)
+        if (this.elements.startExperiment) {
+            this.elements.startExperiment.textContent = '실험 중지';
+            this.elements.startExperiment.classList.remove('btn-primary');
+            this.elements.startExperiment.classList.add('btn-secondary');
+        }
         
         // 실험 데이터 초기화
         this.currentTime = 0;
@@ -699,24 +809,71 @@ class WiFiInterferenceLab {
             this.updateCalculations();
         }, 500); // 0.5초마다 업데이트 (더 부드러운 곡선)
         
-        // 성공 메시지
-        this.showNotification('실험이 시작되었습니다!', 'success');
-        console.log('Experiment started successfully');
+        // 사용자 피드백
+        this.showExperimentStatus('실험이 시작되었습니다! 🚀', 'success');
     }
 
     stopExperiment() {
+        console.log('Stopping experiment...');
         this.isExperimentRunning = false;
-        this.elements.startExperiment.textContent = '실험 시작';
-        this.elements.startExperiment.classList.remove('btn-secondary');
-        this.elements.startExperiment.classList.add('btn-primary');
+        
+        // 네비게이션 버튼 업데이트
+        if (this.navStartExperiment) {
+            this.navStartExperiment.innerHTML = '<span class="btn-icon">▶️</span><span class="btn-text">실험 시작</span>';
+            this.navStartExperiment.classList.remove('nav-btn-secondary');
+            this.navStartExperiment.classList.add('nav-btn-primary');
+        }
+        
+        // 기존 버튼 업데이트 (아직 남아있다면)
+        if (this.elements.startExperiment) {
+            this.elements.startExperiment.textContent = '실험 시작';
+            this.elements.startExperiment.classList.remove('btn-secondary');
+            this.elements.startExperiment.classList.add('btn-primary');
+        }
         
         if (this.experimentInterval) {
             clearInterval(this.experimentInterval);
             this.experimentInterval = null;
         }
         
-        // 실험 중지 후에도 차트는 계속 표시
-        this.showNotification('실험이 중지되었습니다.', 'info');
+        // 사용자 피드백
+        this.showExperimentStatus('실험이 중지되었습니다. 📊', 'info');
+    }
+
+    // 실험 상태 표시
+    showExperimentStatus(message, type) {
+        const status = document.createElement('div');
+        status.className = `experiment-status ${type}`;
+        status.textContent = message;
+        
+        Object.assign(status.style, {
+            position: 'fixed',
+            top: '80px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            backgroundColor: type === 'success' ? 'rgba(40, 167, 69, 0.9)' : 'rgba(0, 123, 255, 0.9)',
+            color: '#ffffff',
+            padding: '10px 20px',
+            borderRadius: '4px',
+            fontSize: '14px',
+            fontWeight: '600',
+            zIndex: '1000',
+            opacity: '0',
+            transition: 'opacity 0.3s ease',
+            boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)',
+            border: '1px solid rgba(255, 255, 255, 0.2)'
+        });
+        
+        document.body.appendChild(status);
+        
+        // 페이드 인
+        setTimeout(() => status.style.opacity = '1', 100);
+        
+        // 3초 후 페이드 아웃
+        setTimeout(() => {
+            status.style.opacity = '0';
+            setTimeout(() => document.body.removeChild(status), 300);
+        }, 3000);
     }
 
     resetExperiment() {
@@ -1266,31 +1423,39 @@ class WiFiInterferenceLab {
         this.settingsModal.classList.remove('show');
     }
 
-    // 설정 버튼 드래그 기능
+    // 설정 버튼 드래그 기능 - 참고 사이트처럼 자유롭게 움직이도록 완전 재작성
     initializeDragAndDrop() {
-        const settingsButton = this.settingsButton.parentElement; // 부모 요소(컨테이너)를 가져옴
-        let isDragging = false;
-        let startX, startY;
-        let startLeft, startTop;
+        // 설정 버튼 컨테이너를 직접 찾기
+        const settingsContainer = document.querySelector('.settings-button-container');
+        
+        if (!settingsContainer) {
+            console.error('Settings button container not found!');
+            return;
+        }
 
-        // 마우스 이벤트
-        settingsButton.addEventListener('mousedown', (e) => {
+        let isDragging = false;
+        let dragOffsetX = 0;
+        let dragOffsetY = 0;
+
+        // 마우스 이벤트 - 더 간단하고 직접적인 접근
+        settingsContainer.addEventListener('mousedown', (e) => {
             e.preventDefault();
             e.stopPropagation();
             
             isDragging = true;
-            startX = e.clientX;
-            startY = e.clientY;
             
-            // 현재 위치 가져오기
-            const rect = settingsButton.getBoundingClientRect();
-            startLeft = rect.left;
-            startTop = rect.top;
+            // 드래그 중 CSS 클래스 추가
+            settingsContainer.classList.add('dragging');
+            
+            // 마우스 위치와 요소 위치의 차이를 계산
+            const rect = settingsContainer.getBoundingClientRect();
+            dragOffsetX = e.clientX - rect.left;
+            dragOffsetY = e.clientY - rect.top;
             
             // 커서 변경
-            settingsButton.style.cursor = 'grabbing';
+            settingsContainer.style.cursor = 'grabbing';
             
-            console.log('Mouse down - starting drag');
+            console.log('Mouse down - starting drag, offset:', dragOffsetX, dragOffsetY);
         });
 
         document.addEventListener('mousemove', (e) => {
@@ -1298,23 +1463,20 @@ class WiFiInterferenceLab {
             
             e.preventDefault();
             
-            const deltaX = e.clientX - startX;
-            const deltaY = e.clientY - startY;
+            // 마우스 위치에서 오프셋을 빼서 요소 위치 계산
+            let newLeft = e.clientX - dragOffsetX;
+            let newTop = e.clientY - dragOffsetY;
             
-            // 새 위치 계산
-            let newLeft = startLeft + deltaX;
-            let newTop = startTop + deltaY;
+            // 화면 경계 제한 (더 관대하게)
+            const maxX = window.innerWidth - settingsContainer.offsetWidth;
+            const maxY = window.innerHeight - settingsContainer.offsetHeight;
             
-            // 화면 경계 제한
-            const maxX = window.innerWidth - settingsButton.offsetWidth;
-            const maxY = window.innerHeight - settingsButton.offsetHeight;
-            
-            newLeft = Math.max(0, Math.min(newLeft, maxX));
-            newTop = Math.max(0, Math.min(newTop, maxY));
+            newLeft = Math.max(-20, Math.min(newLeft, maxX + 20)); // 약간의 여유 공간
+            newTop = Math.max(-20, Math.min(newTop, maxY + 20));
             
             // 위치 적용
-            settingsButton.style.left = newLeft + 'px';
-            settingsButton.style.top = newTop + 'px';
+            settingsContainer.style.left = newLeft + 'px';
+            settingsContainer.style.top = newTop + 'px';
             
             console.log('Dragging to:', newLeft, newTop);
         });
@@ -1322,26 +1484,29 @@ class WiFiInterferenceLab {
         document.addEventListener('mouseup', () => {
             if (isDragging) {
                 isDragging = false;
-                settingsButton.style.cursor = 'grab';
+                // 드래그 중 CSS 클래스 제거
+                settingsContainer.classList.remove('dragging');
+                settingsContainer.style.cursor = 'grab';
                 console.log('Mouse up - drag ended');
             }
         });
 
-        // 터치 이벤트
-        settingsButton.addEventListener('touchstart', (e) => {
+        // 터치 이벤트도 동일한 로직으로
+        settingsContainer.addEventListener('touchstart', (e) => {
             e.preventDefault();
             e.stopPropagation();
             
             isDragging = true;
+            // 드래그 중 CSS 클래스 추가
+            settingsContainer.classList.add('dragging');
+            
             const touch = e.touches[0];
-            startX = touch.clientX;
-            startY = touch.clientY;
             
-            const rect = settingsButton.getBoundingClientRect();
-            startLeft = rect.left;
-            startTop = rect.top;
+            const rect = settingsContainer.getBoundingClientRect();
+            dragOffsetX = touch.clientX - rect.left;
+            dragOffsetY = touch.clientY - rect.top;
             
-            console.log('Touch start - starting drag');
+            console.log('Touch start - starting drag, offset:', dragOffsetX, dragOffsetY);
         });
 
         document.addEventListener('touchmove', (e) => {
@@ -1350,28 +1515,75 @@ class WiFiInterferenceLab {
             e.preventDefault();
             
             const touch = e.touches[0];
-            const deltaX = touch.clientX - startX;
-            const deltaY = touch.clientY - startY;
+            let newLeft = touch.clientX - dragOffsetX;
+            let newTop = touch.clientY - dragOffsetY;
             
-            let newLeft = startLeft + deltaX;
-            let newTop = startTop + deltaY;
+            const maxX = window.innerWidth - settingsContainer.offsetWidth;
+            const maxY = window.innerHeight - settingsContainer.offsetHeight;
             
-            const maxX = window.innerWidth - settingsButton.offsetWidth;
-            const maxY = window.innerHeight - settingsButton.offsetHeight;
+            newLeft = Math.max(-20, Math.min(newLeft, maxX + 20));
+            newTop = Math.max(-20, Math.min(newTop, maxY + 20));
             
-            newLeft = Math.max(0, Math.min(newLeft, maxX));
-            newTop = Math.max(0, Math.min(newTop, maxY));
-            
-            settingsButton.style.left = newLeft + 'px';
-            settingsButton.style.top = newTop + 'px';
+            settingsContainer.style.left = newLeft + 'px';
+            settingsContainer.style.top = newTop + 'px';
         });
 
         document.addEventListener('touchend', () => {
-            isDragging = false;
-            console.log('Touch end - drag ended');
+            if (isDragging) {
+                isDragging = false;
+                // 드래그 중 CSS 클래스 제거
+                settingsContainer.classList.remove('dragging');
+                console.log('Touch end - drag ended');
+            }
         });
 
-        console.log('Drag and drop initialized for:', settingsButton);
+        console.log('Drag and drop initialized successfully for:', settingsContainer);
+        
+        // 초기 위치 설정 - CSS의 fixed 위치를 JavaScript로 제어
+        const initialTop = 100; // CSS의 top: 100px와 일치
+        const initialRight = parseInt(getComputedStyle(settingsContainer).right) || 20;
+        
+        settingsContainer.style.top = initialTop + 'px';
+        settingsContainer.style.right = 'auto';
+        settingsContainer.style.left = (window.innerWidth - settingsContainer.offsetWidth - initialRight) + 'px';
+        
+        console.log('Initial position set:', settingsContainer.style.left, settingsContainer.style.top);
+        
+        // 성공 메시지 표시 (사용자에게 드래그 가능함을 알림)
+        this.showDragHint();
+    }
+
+    // 드래그 힌트 표시
+    showDragHint() {
+        const hint = document.createElement('div');
+        hint.className = 'drag-hint';
+        hint.textContent = '💡 설정 버튼을 드래그하여 위치를 변경할 수 있습니다';
+        
+        Object.assign(hint.style, {
+            position: 'fixed',
+            top: '90px',
+            right: '20px',
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            color: '#ffffff',
+            padding: '8px 12px',
+            borderRadius: '4px',
+            fontSize: '12px',
+            zIndex: '999',
+            opacity: '0',
+            transition: 'opacity 0.3s ease',
+            pointerEvents: 'none'
+        });
+        
+        document.body.appendChild(hint);
+        
+        // 페이드 인
+        setTimeout(() => hint.style.opacity = '1', 100);
+        
+        // 3초 후 페이드 아웃
+        setTimeout(() => {
+            hint.style.opacity = '0';
+            setTimeout(() => document.body.removeChild(hint), 300);
+        }, 3000);
     }
 }
 
