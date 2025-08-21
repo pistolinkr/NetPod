@@ -17,6 +17,9 @@ class WiFiInterferenceLab {
         this.updateSpecsSummary();
         this.updateDynamicMessages();
         this.updateBroadbandMessages();
+        
+        // Initialize drag and drop for settings button
+        this.initializeDragAndDrop();
     }
 
     initializeElements() {
@@ -258,23 +261,23 @@ class WiFiInterferenceLab {
                     label: 'RSSI (dBm)',
                     data: [],
                     borderColor: '#000000',
-                    backgroundColor: 'rgba(0, 0, 0, 0.1)',
-                    borderWidth: 3,
-                    fill: false,
-                    tension: 0.6,
-                    pointRadius: 6,
+                    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
                     pointBackgroundColor: '#000000',
                     pointBorderColor: '#ffffff',
-                    pointBorderWidth: 2,
-                    pointHoverRadius: 8,
-                    pointHoverBorderWidth: 3
+                    pointBorderWidth: 1,
+                    pointHoverRadius: 6,
+                    pointHoverBorderWidth: 2
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 animation: {
-                    duration: 500,
+                    duration: 300,
                     easing: 'easeInOutQuart'
                 },
                 scales: {
@@ -283,13 +286,13 @@ class WiFiInterferenceLab {
                         min: -100,
                         max: -30,
                         grid: {
-                            color: '#000000',
+                            color: '#e0e0e0',
                             lineWidth: 1
                         },
                         ticks: {
-                            color: '#000000',
+                            color: '#666666',
                             font: {
-                                size: 12
+                                size: 11
                             },
                             stepSize: 10
                         },
@@ -298,30 +301,30 @@ class WiFiInterferenceLab {
                             text: 'RSSI (dBm)',
                             color: '#000000',
                             font: {
-                                size: 14,
-                                weight: 'bold'
+                                size: 13,
+                                weight: '600'
                             }
                         }
                     },
                     x: {
                         grid: {
-                            color: '#000000',
+                            color: '#e0e0e0',
                             lineWidth: 1
                         },
                         ticks: {
-                            color: '#000000',
+                            color: '#666666',
                             font: {
-                                size: 12
+                                size: 11
                             },
-                            maxTicksLimit: 20
+                            maxTicksLimit: 15
                         },
                         title: {
                             display: true,
                             text: '시간 (초)',
                             color: '#000000',
                             font: {
-                                size: 14,
-                                weight: 'bold'
+                                size: 13,
+                                weight: '600'
                             }
                         }
                     }
@@ -332,10 +335,29 @@ class WiFiInterferenceLab {
                         labels: {
                             color: '#000000',
                             font: {
-                                size: 12
+                                size: 12,
+                                weight: '500'
+                            }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: '#ffffff',
+                        titleColor: '#000000',
+                        bodyColor: '#000000',
+                        borderColor: '#000000',
+                        borderWidth: 1,
+                        cornerRadius: 4,
+                        displayColors: false,
+                        callbacks: {
+                            label: function(context) {
+                                return `RSSI: ${context.parsed.y.toFixed(1)} dBm`;
                             }
                         }
                     }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
                 }
             }
         });
@@ -1180,6 +1202,9 @@ class WiFiInterferenceLab {
         if (routerSpecs.antenna) this.routerAntenna.value = routerSpecs.antenna;
         if (routerSpecs.height) this.routerHeight.value = routerSpecs.height;
         if (routerSpecs.location) this.routerLocation.value = routerSpecs.location;
+        
+        // 설정 값 변경 후 UI 업데이트
+        this.updateRouterSpecs();
     }
 
     loadBroadbandSpecsFromJson(broadbandSpecs) {
@@ -1191,6 +1216,9 @@ class WiFiInterferenceLab {
         if (broadbandSpecs.uploadSpeedStability) this.uploadSpeedStability.value = broadbandSpecs.uploadSpeedStability;
         if (broadbandSpecs.internetType) this.internetType.value = broadbandSpecs.internetType;
         if (broadbandSpecs.networkCongestion) this.networkCongestion.value = broadbandSpecs.networkCongestion;
+        
+        // 설정 값 변경 후 UI 업데이트
+        this.updateBroadbandSpecs();
     }
 
     loadExperimentSettingsFromJson(experimentSettings) {
@@ -1202,15 +1230,12 @@ class WiFiInterferenceLab {
         if (experimentSettings.power) this.elements.power.value = experimentSettings.power;
         if (experimentSettings.weather) this.elements.weather.value = experimentSettings.weather;
         if (experimentSettings.time) this.elements.time.value = experimentSettings.time;
+        
+        // 설정 값 변경 후 UI 업데이트
+        this.updateCalculations();
     }
 
     updateAllDisplays() {
-        // Update router specs
-        this.updateRouterSpecs();
-        
-        // Update broadband specs
-        this.updateBroadbandSpecs();
-        
         // Update experiment calculations
         this.updateCalculations();
         
@@ -1239,6 +1264,114 @@ class WiFiInterferenceLab {
 
     closeSettingsModal() {
         this.settingsModal.classList.remove('show');
+    }
+
+    // 설정 버튼 드래그 기능
+    initializeDragAndDrop() {
+        const settingsButton = this.settingsButton.parentElement; // 부모 요소(컨테이너)를 가져옴
+        let isDragging = false;
+        let startX, startY;
+        let startLeft, startTop;
+
+        // 마우스 이벤트
+        settingsButton.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            isDragging = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            
+            // 현재 위치 가져오기
+            const rect = settingsButton.getBoundingClientRect();
+            startLeft = rect.left;
+            startTop = rect.top;
+            
+            // 커서 변경
+            settingsButton.style.cursor = 'grabbing';
+            
+            console.log('Mouse down - starting drag');
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            
+            e.preventDefault();
+            
+            const deltaX = e.clientX - startX;
+            const deltaY = e.clientY - startY;
+            
+            // 새 위치 계산
+            let newLeft = startLeft + deltaX;
+            let newTop = startTop + deltaY;
+            
+            // 화면 경계 제한
+            const maxX = window.innerWidth - settingsButton.offsetWidth;
+            const maxY = window.innerHeight - settingsButton.offsetHeight;
+            
+            newLeft = Math.max(0, Math.min(newLeft, maxX));
+            newTop = Math.max(0, Math.min(newTop, maxY));
+            
+            // 위치 적용
+            settingsButton.style.left = newLeft + 'px';
+            settingsButton.style.top = newTop + 'px';
+            
+            console.log('Dragging to:', newLeft, newTop);
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isDragging) {
+                isDragging = false;
+                settingsButton.style.cursor = 'grab';
+                console.log('Mouse up - drag ended');
+            }
+        });
+
+        // 터치 이벤트
+        settingsButton.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            isDragging = true;
+            const touch = e.touches[0];
+            startX = touch.clientX;
+            startY = touch.clientY;
+            
+            const rect = settingsButton.getBoundingClientRect();
+            startLeft = rect.left;
+            startTop = rect.top;
+            
+            console.log('Touch start - starting drag');
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            
+            e.preventDefault();
+            
+            const touch = e.touches[0];
+            const deltaX = touch.clientX - startX;
+            const deltaY = touch.clientY - startY;
+            
+            let newLeft = startLeft + deltaX;
+            let newTop = startTop + deltaY;
+            
+            const maxX = window.innerWidth - settingsButton.offsetWidth;
+            const maxY = window.innerHeight - settingsButton.offsetHeight;
+            
+            newLeft = Math.max(0, Math.min(newLeft, maxX));
+            newTop = Math.max(0, Math.min(newTop, maxY));
+            
+            settingsButton.style.left = newLeft + 'px';
+            settingsButton.style.top = newTop + 'px';
+        });
+
+        document.addEventListener('touchend', () => {
+            isDragging = false;
+            console.log('Touch end - drag ended');
+        });
+
+        console.log('Drag and drop initialized for:', settingsButton);
     }
 }
 

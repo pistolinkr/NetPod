@@ -10,37 +10,34 @@
     <div class="container">
         <!-- Fixed Navigation Header -->
         <header class="nav-header-fixed">
-            <div class="nav-container">
-                <div class="logo-container">
-                    <img src="assets/images/logo/80x80/logo.png" alt="NetPod Logo" class="logo-img logo-80" id="logo80">
-                    <img src="assets/images/logo/60x60/logo.png" alt="NetPod Logo" class="logo-img logo-60" id="logo60">
-                    <img src="assets/images/logo/50x50/logo.png" alt="NetPod Logo" class="logo-img logo-50" id="logo50">
-                    <div class="logo-text">
-                        <h1>NetPod</h1>
-                        <p>2.4GHz vs 5GHz 대역대 간섭 현상 시뮬레이션</p>
-                    </div>
+            <div class="logo-container">
+                <img src="assets/images/logo/80x80/logo.png" alt="NetPod Logo" class="logo-img logo-80" id="logo80">
+                <img src="assets/images/logo/60x60/logo.png" alt="NetPod Logo" class="logo-img logo-60" id="logo60">
+                <img src="assets/images/logo/50x50/logo.png" alt="NetPod Logo" class="logo-img logo-50" id="logo50">
+                <div class="logo-text">
+                    <h1>NetPod</h1>
+                </div>
+            </div>
+            
+            <nav class="nav-controls">
+                <div class="nav-button-group">
+                    <button id="navStartExperiment" class="nav-btn nav-btn-primary">
+                        <span class="btn-icon">▶️</span>
+                        <span class="btn-text">실험 시작</span>
+                    </button>
+                    <button id="navResetExperiment" class="nav-btn nav-btn-secondary">
+                        <span class="btn-icon">🔄</span>
+                        <span class="btn-text">실험 초기화</span>
+                    </button>
+                    <button id="navLoadResults" class="nav-btn nav-btn-success">
+                        <span class="btn-icon">📁</span>
+                        <span class="btn-text">결과 불러오기</span>
+                    </button>
                 </div>
                 
-                <nav class="nav-controls">
-                    <div class="nav-button-group">
-                        <button id="navStartExperiment" class="nav-btn nav-btn-primary">
-                            <span class="btn-icon">▶️</span>
-                            <span class="btn-text">실험 시작</span>
-                        </button>
-                        <button id="navResetExperiment" class="nav-btn nav-btn-secondary">
-                            <span class="btn-icon">🔄</span>
-                            <span class="btn-text">실험 초기화</span>
-                        </button>
-                        <button id="navLoadResults" class="nav-btn nav-btn-success">
-                            <span class="btn-icon">📁</span>
-                            <span class="btn-text">결과 불러오기</span>
-                        </button>
-                    </div>
-                    
-                    <!-- 숨겨진 파일 입력 -->
-                    <input type="file" id="navJsonFileInput" accept=".json" style="display: none;">
-                </nav>
-            </div>
+                <!-- 숨겨진 파일 입력 -->
+                <input type="file" id="navJsonFileInput" accept=".json" style="display: none;">
+            </nav>
         </header>
 
         <!-- Main Content with top margin for fixed header -->
