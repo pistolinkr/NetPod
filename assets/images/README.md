@@ -1,62 +1,63 @@
-# 🎨 NetPod 이미지 및 로고 폴더
+# 📁 NetPod 이미지 폴더 구조
 
 이 폴더는 NetPod 웹 애플리케이션의 이미지와 로고를 저장하는 곳입니다.
 
-## 📋 권장 파일 목록
+## 📁 폴더 구조
 
-### 필수 이미지
-- `logo.png` - NetPod 메인 로고 (200x200px, 투명 배경)
-- `favicon.ico` - 브라우저 탭 아이콘 (32x32px)
+```
+assets/images/
+├── logo/               # 반응형 로고 이미지
+│   ├── 80x80/         # 데스크톱용 로고 (80x80px)
+│   ├── 60x60/         # 태블릿용 로고 (60x60px)
+│   └── 50x50/         # 모바일용 로고 (50x50px)
+└── README.md           # 이 파일
+```
 
-### 선택 이미지
-- `banner.png` - 헤더 배너 (1200x300px)
-- `icon-192.png` - PWA 아이콘 (192x192px)
-- `icon-512.png` - PWA 아이콘 (512x512px)
+## 🎯 로고 이미지 사양
 
-## 🎯 이미지 사양
+### 반응형 로고 (logo.png)
+각 폴더에 동일한 파일명 `logo.png`로 저장해야 합니다:
 
-### 로고 (logo.png)
-- **크기**: 200x200 픽셀
-- **형식**: PNG (투명 배경 권장)
-- **스타일**: 흑백 테마에 맞는 디자인
-- **용도**: 헤더, 푸터, 로딩 화면
+- **80x80/logo.png**: 데스크톱 화면용 (768px 이상)
+- **60x60/logo.png**: 태블릿 화면용 (768px 이하)
+- **50x50/logo.png**: 모바일 화면용 (480px 이하)
 
-### 파비콘 (favicon.ico)
-- **크기**: 32x32 픽셀
-- **형식**: ICO (여러 크기 포함 권장)
-- **스타일**: 간단하고 명확한 디자인
-- **용도**: 브라우저 탭, 북마크
-
-### 배너 (banner.png)
-- **크기**: 1200x300 픽셀
-- **형식**: PNG
-- **스타일**: NetPod 브랜드 이미지
-- **용도**: 헤더 배경, 소셜 미디어
+### 이미지 형식
+- **파일 형식**: PNG (투명 배경 권장)
+- **스타일**: NetPod 흑백 테마에 맞는 디자인
+- **용도**: 헤더 로고, 반응형 디스플레이
 
 ## 🔧 사용 방법
 
 ### HTML에서 사용
 ```html
-<img src="assets/images/logo.png" alt="NetPod Logo">
+<!-- 3개 크기의 로고가 모두 포함되어 있음 -->
+<img src="assets/images/logo/80x80/logo.png" class="logo-img logo-80">
+<img src="assets/images/logo/60x60/logo.png" class="logo-img logo-60">
+<img src="assets/images/logo/50x50/logo.png" class="logo-img logo-50">
 ```
 
 ### CSS에서 사용
 ```css
-.logo {
-    background-image: url('assets/images/logo.png');
-    background-size: contain;
-    background-repeat: no-repeat;
-}
-```
+/* CSS 미디어 쿼리로 화면 크기별 로고 전환 */
+.logo-80 { display: block; }    /* 기본 표시 */
+.logo-60 { display: none; }     /* 기본 숨김 */
+.logo-50 { display: none; }     /* 기본 숨김 */
 
-### 파비콘 설정
-```html
-<link rel="icon" type="image/x-icon" href="assets/images/favicon.ico">
+@media (max-width: 768px) {
+    .logo-80 { display: none; }
+    .logo-60 { display: block; }
+}
+
+@media (max-width: 480px) {
+    .logo-60 { display: none; }
+    .logo-50 { display: block; }
+}
 ```
 
 ## 📝 참고사항
 
-- 모든 이미지는 NetPod의 흑백 테마와 일치해야 합니다
+- 모든 로고 이미지는 동일한 디자인이어야 합니다
 - 투명 배경을 사용하여 다양한 배경에서 잘 보이도록 합니다
-- 고해상도 디스플레이를 고려하여 2배 크기로 제작하는 것을 권장합니다
-- 파일 크기는 웹 성능을 위해 최적화해야 합니다
+- 파일명은 반드시 `logo.png`로 통일해야 합니다
+- CSS에서 자동으로 화면 크기에 맞는 로고를 표시합니다

@@ -11,28 +11,12 @@ Network Test/
 ├── script.js           # JavaScript 로직
 ├── assets/             # 정적 자산 폴더
 │   └── images/         # 이미지 및 로고 폴더
-│       ├── logo.png    # NetPod 로고 (권장: 200x200px)
-│       ├── favicon.ico # 파비콘 (권장: 32x32px)
-│       └── banner.png  # 배너 이미지 (권장: 1200x300px)
+│       └── logo/       # 반응형 로고 이미지
+│           ├── 80x80/  # 데스크톱용 로고
+│           ├── 60x60/  # 태블릿용 로고
+│           └── 50x50/  # 모바일용 로고
 └── README.md           # 프로젝트 문서
 ```
-
-## 🎨 로고 및 이미지 가이드
-
-### 로고 폴더 위치
-- **경로**: `assets/images/`
-- **용도**: NetPod 브랜드 이미지, 로고, 아이콘 저장
-
-### 권장 이미지 사양
-- **메인 로고**: PNG 형식, 투명 배경, 200x200px
-- **파비콘**: ICO 형식, 32x32px
-- **배너**: PNG 형식, 1200x300px
-- **아이콘**: SVG 또는 PNG 형식, 64x64px
-
-### 로고 사용법
-1. 로고 이미지를 `assets/images/` 폴더에 저장
-2. `index.html`에서 `<img src="assets/images/logo.png">` 형태로 사용
-3. CSS에서 `background-image: url('assets/images/logo.png')` 형태로 사용
 
 ## 🚀 주요 기능
 

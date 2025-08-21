@@ -103,6 +103,39 @@ class WiFiInterferenceLab {
         this.loadBroadbandSpecs = document.getElementById('loadBroadbandSpecs');
         this.loadJsonResults = document.getElementById('loadJsonResults');
         this.importStatus = document.getElementById('importStatus');
+        
+        // Settings button and modal elements
+        this.settingsButton = document.getElementById('settingsButton');
+        this.settingsModal = document.getElementById('settingsModal');
+        this.closeSettings = document.getElementById('closeSettings');
+        
+        this.settingsButton.addEventListener('click', () => this.openSettings());
+        this.closeSettings.addEventListener('click', () => this.closeSettingsModal());
+        
+        // 모달 외부 클릭 시 닫기
+        this.settingsModal.addEventListener('click', (e) => {
+            if (e.target === this.settingsModal) {
+                this.closeSettingsModal();
+            }
+        });
+        
+        // ESC 키로 모달 닫기
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.settingsModal.classList.contains('show')) {
+                this.closeSettingsModal();
+            }
+        });
+        
+        // Navigation button events
+        this.navStartExperiment = document.getElementById('navStartExperiment');
+        this.navResetExperiment = document.getElementById('navResetExperiment');
+        this.navLoadResults = document.getElementById('navLoadResults');
+        this.navJsonFileInput = document.getElementById('navJsonFileInput');
+        
+        this.navStartExperiment.addEventListener('click', () => this.toggleExperiment());
+        this.navResetExperiment.addEventListener('click', () => this.resetExperiment());
+        this.navLoadResults.addEventListener('click', () => this.navJsonFileInput.click());
+        this.navJsonFileInput.addEventListener('change', (e) => this.handleNavFileSelection(e));
     }
 
     bindEvents() {
@@ -165,10 +198,40 @@ class WiFiInterferenceLab {
         this.selectJsonFile.addEventListener('click', () => this.jsonFileInput.click());
         this.jsonFileInput.addEventListener('change', (e) => this.handleFileSelection(e));
         this.loadJsonResults.addEventListener('click', () => this.loadJsonFile());
+        
+        // Settings button events
+        this.settingsButton.addEventListener('click', () => this.openSettings());
+        this.closeSettings.addEventListener('click', () => this.closeSettingsModal());
+        
+        // 모달 외부 클릭 시 닫기
+        this.settingsModal.addEventListener('click', (e) => {
+            if (e.target === this.settingsModal) {
+                this.closeSettingsModal();
+            }
+        });
+        
+        // ESC 키로 모달 닫기
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.settingsModal.classList.contains('show')) {
+                this.closeSettingsModal();
+            }
+        });
+        
+        // Navigation button events
+        this.navStartExperiment = document.getElementById('navStartExperiment');
+        this.navResetExperiment = document.getElementById('navResetExperiment');
+        this.navLoadResults = document.getElementById('navLoadResults');
+        this.navJsonFileInput = document.getElementById('navJsonFileInput');
+        
+        this.navStartExperiment.addEventListener('click', () => this.toggleExperiment());
+        this.navResetExperiment.addEventListener('click', () => this.resetExperiment());
+        this.navLoadResults.addEventListener('click', () => this.navJsonFileInput.click());
+        this.navJsonFileInput.addEventListener('change', (e) => this.handleNavFileSelection(e));
     }
 
     initializeChart() {
         console.log('Initializing chart...');
+        
         const ctx = this.elements.signalChart.getContext('2d');
         
         if (!ctx) {
@@ -198,8 +261,8 @@ class WiFiInterferenceLab {
                     backgroundColor: 'rgba(0, 0, 0, 0.1)',
                     borderWidth: 3,
                     fill: false,
-                    tension: 0.6, // 더 부드러운 곡선
-                    pointRadius: 6, // 더 큰 포인트
+                    tension: 0.6,
+                    pointRadius: 6,
                     pointBackgroundColor: '#000000',
                     pointBorderColor: '#ffffff',
                     pointBorderWidth: 2,
@@ -211,8 +274,8 @@ class WiFiInterferenceLab {
                 responsive: true,
                 maintainAspectRatio: false,
                 animation: {
-                    duration: 500, // 더 긴 애니메이션
-                    easing: 'easeInOutQuart' // 부드러운 이징
+                    duration: 500,
+                    easing: 'easeInOutQuart'
                 },
                 scales: {
                     y: {
@@ -228,7 +291,7 @@ class WiFiInterferenceLab {
                             font: {
                                 size: 12
                             },
-                            stepSize: 10 // 10dBm 단위로 표시
+                            stepSize: 10
                         },
                         title: {
                             display: true,
@@ -250,7 +313,7 @@ class WiFiInterferenceLab {
                             font: {
                                 size: 12
                             },
-                            maxTicksLimit: 20 // X축 라벨 개수 제한
+                            maxTicksLimit: 20
                         },
                         title: {
                             display: true,
@@ -272,38 +335,12 @@ class WiFiInterferenceLab {
                                 size: 12
                             }
                         }
-                    },
-                    tooltip: {
-                        backgroundColor: '#ffffff',
-                        titleColor: '#000000',
-                        bodyColor: '#000000',
-                        borderColor: '#000000',
-                        borderWidth: 2,
-                        cornerRadius: 0,
-                        displayColors: false,
-                        callbacks: {
-                            label: function(context) {
-                                return `RSSI: ${context.parsed.y.toFixed(1)} dBm`;
-                            }
-                        }
-                    }
-                },
-                interaction: {
-                    intersect: false,
-                    mode: 'index'
-                },
-                elements: {
-                    point: {
-                        hoverBackgroundColor: '#000000',
-                        hoverBorderColor: '#ffffff'
                     }
                 }
             }
         });
         
-        this.chartData = [];
-        console.log('Chart initialization completed successfully');
-        console.log('Chart object:', this.chart);
+        console.log('Chart created successfully');
     }
 
     loadDefaultValues() {
@@ -374,22 +411,19 @@ class WiFiInterferenceLab {
     }
 
     updateChart() {
-        if (!this.chart) {
-            console.error('Chart is not initialized!');
+        if (!this.chart || !this.chartData || this.chartData.length === 0) {
+            console.log('Chart or data not available for update');
             return;
         }
         
-        console.log('Updating chart with data:', this.chartData);
+        console.log('Updating chart with', this.chartData.length, 'data points');
         
         // 차트 데이터 업데이트
-        this.chart.data.labels = this.chartData.map(d => d.time);
-        this.chart.data.datasets[0].data = this.chartData.map(d => d.rssi);
+        this.chart.data.labels = this.chartData.map(point => point.time);
+        this.chart.data.datasets[0].data = this.chartData.map(point => point.rssi);
         
-        console.log('Chart labels:', this.chart.data.labels);
-        console.log('Chart data:', this.chart.data.datasets[0].data);
-        
-        // 차트 업데이트 (애니메이션과 함께)
-        this.chart.update('active');
+        // 차트 업데이트
+        this.chart.update('none');
         
         console.log('Chart updated successfully');
     }
@@ -1064,6 +1098,15 @@ class WiFiInterferenceLab {
         }
     }
 
+    handleNavFileSelection(event) {
+        const file = event.target.files[0];
+        if (file) {
+            this.selectedFileName.textContent = file.name;
+            this.loadJsonResults.disabled = false;
+            this.showImportStatus('파일이 선택되었습니다. "결과 불러오기" 버튼을 클릭하세요.', 'info');
+        }
+    }
+
     loadJsonFile() {
         const file = this.jsonFileInput.files[0];
         if (!file) {
@@ -1188,6 +1231,14 @@ class WiFiInterferenceLab {
                 this.importStatus.className = 'import-status';
             }, 5000);
         }
+    }
+
+    openSettings() {
+        this.settingsModal.classList.add('show');
+    }
+
+    closeSettingsModal() {
+        this.settingsModal.classList.remove('show');
     }
 }
 
