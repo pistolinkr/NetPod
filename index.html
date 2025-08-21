@@ -46,9 +46,9 @@
                             <label for="router24Power">전송 파워 (mW):</label>
                             <input type="range" id="router24Power" min="1" max="200" value="100" step="1">
                             <span class="value-display" id="router24PowerValue">100 mW</span>
-                            <div class="setting-tip">
-                                <span class="tip-icon">💡</span>
-                                <span class="tip-text">높은 파워: 범위 확장, 낮은 파워: 배터리 절약, 간섭 감소</span>
+                            <div class="dynamic-message" id="power24Message">
+                                <span class="message-icon">💡</span>
+                                <span class="message-text">높은 파워: 범위 확장, 낮은 파워: 배터리 절약, 간섭 감소</span>
                             </div>
                         </div>
                         <div class="spec-item">
@@ -59,9 +59,9 @@
                                 <option value="11">11번 채널 (2.462 GHz)</option>
                                 <option value="auto">자동 선택</option>
                             </select>
-                            <div class="setting-tip">
-                                <span class="tip-icon">💡</span>
-                                <span class="tip-text">채널 1,6,11은 서로 간섭이 적음. 자동선택은 환경에 따라 최적화</span>
+                            <div class="dynamic-message" id="channel24Message">
+                                <span class="message-icon">💡</span>
+                                <span class="message-text">채널 6 선택됨: 다른 2.4GHz 장치와 간섭 최소화</span>
                             </div>
                         </div>
                         <div class="spec-item">
@@ -70,9 +70,9 @@
                                 <option value="20">20 MHz</option>
                                 <option value="40" selected>40 MHz</option>
                             </select>
-                            <div class="setting-tip">
-                                <span class="tip-icon">💡</span>
-                                <span class="tip-text">40MHz: 속도 향상, 20MHz: 간섭 감소 및 안정성</span>
+                            <div class="dynamic-message" id="bandwidth24Message">
+                                <span class="message-icon">💡</span>
+                                <span class="message-text">40MHz 선택됨: 속도 향상, 다만 간섭 가능성 증가</span>
                             </div>
                         </div>
                     </div>
@@ -83,9 +83,9 @@
                             <label for="router5Power">전송 파워 (mW):</label>
                             <input type="range" id="router5Power" min="1" max="1000" value="200" step="10">
                             <span class="value-display" id="router5PowerValue">200 mW</span>
-                            <div class="setting-tip">
-                                <span class="tip-icon">💡</span>
-                                <span class="tip-text">5GHz는 높은 파워로도 범위가 제한적. 벽 투과력이 약함</span>
+                            <div class="dynamic-message" id="power5Message">
+                                <span class="message-icon">💡</span>
+                                <span class="message-text">200mW 설정: 5GHz는 높은 파워로도 범위가 제한적, 벽 투과력 약함</span>
                             </div>
                         </div>
                         <div class="spec-item">
@@ -101,9 +101,9 @@
                                 <option value="161">161번 채널 (5.805 GHz)</option>
                                 <option value="auto">자동 선택</option>
                             </select>
-                            <div class="setting-tip">
-                                <span class="tip-icon">💡</span>
-                                <span class="tip-text">높은 채널(149-161): DFS 제한 없음, 낮은 채널(36-48): 일부 지역에서 제한</span>
+                            <div class="dynamic-message" id="channel5Message">
+                                <span class="message-icon">💡</span>
+                                <span class="message-text">채널 149 선택됨: DFS 제한 없음, 안정적인 신호 전송</span>
                             </div>
                         </div>
                         <div class="spec-item">
@@ -114,9 +114,9 @@
                                 <option value="80" selected>80 MHz</option>
                                 <option value="160">160 MHz</option>
                             </select>
-                            <div class="setting-tip">
-                                <span class="tip-icon">💡</span>
-                                <span class="tip-text">160MHz: 최고 속도, 80MHz: 속도와 안정성 균형, 20MHz: 최대 안정성</span>
+                            <div class="dynamic-message" id="bandwidth5Message">
+                                <span class="message-icon">💡</span>
+                                <span class="message-text">80MHz 선택됨: 속도와 안정성의 균형, 대부분 환경에 적합</span>
                             </div>
                         </div>
                     </div>
@@ -130,18 +130,18 @@
                                 <option value="external" selected>외장 안테나 (3dBi)</option>
                                 <option value="highgain">고이득 안테나 (6dBi)</option>
                             </select>
-                            <div class="setting-tip">
-                                <span class="tip-icon">💡</span>
-                                <span class="tip-text">고이득: 범위 확장, 내장: 간섭 감소, 외장: 균형잡힌 성능</span>
+                            <div class="dynamic-message" id="antennaMessage">
+                                <span class="message-icon">💡</span>
+                                <span class="message-text">외장 안테나 (3dBi) 선택됨: 균형잡힌 성능, 범위와 안정성 조화</span>
                             </div>
                         </div>
                         <div class="spec-item">
                             <label for="routerHeight">설치 높이 (m):</label>
                             <input type="range" id="routerHeight" min="0.5" max="3.0" value="1.5" step="0.1">
                             <span class="value-display" id="routerHeightValue">1.5 m</span>
-                            <div class="setting-tip">
-                                <span class="tip-icon">💡</span>
-                                <span class="tip-text">높은 위치: 범위 확장, 낮은 위치: 특정 구역 집중 신호</span>
+                            <div class="dynamic-message" id="heightMessage">
+                                <span class="message-icon">💡</span>
+                                <span class="message-text">1.5m 높이: 일반적인 가정 환경에 적합, 균형잡힌 신호 분포</span>
                             </div>
                         </div>
                         <div class="spec-item">
@@ -152,9 +152,9 @@
                                 <option value="wall">벽면</option>
                                 <option value="ceiling">천장</option>
                             </select>
-                            <div class="setting-tip">
-                                <span class="tip-icon">💡</span>
-                                <span class="tip-text">중앙: 균등한 신호, 구석: 특정 방 집중, 천장: 전체 범위 확장</span>
+                            <div class="dynamic-message" id="locationMessage">
+                                <span class="message-icon">💡</span>
+                                <span class="message-text">구석 설치: 특정 방에 집중된 신호, 벽 반사 효과 활용</span>
                             </div>
                         </div>
                     </div>
@@ -178,6 +178,120 @@
                         <div class="summary-item">
                             <span class="label">설치:</span>
                             <span class="value" id="summaryLocation">구석, 1.5m 높이</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="broadband-specs">
+            <div class="container">
+                <h2>🌐 브로드밴드 인터넷 설정</h2>
+                <div class="broadband-grid">
+                    <div class="broadband-group">
+                        <h3>📊 다운로드 속도 제한</h3>
+                        <div class="broadband-item">
+                            <label for="maxDownloadSpeed">최대 다운로드 속도:</label>
+                            <div class="speed-input-group">
+                                <input type="number" id="maxDownloadSpeed" min="1" max="10000" value="1000" step="1">
+                                <select id="downloadSpeedUnit">
+                                    <option value="Mbps" selected>Mbps</option>
+                                    <option value="Gbps">Gbps</option>
+                                </select>
+                            </div>
+                            <div class="dynamic-message" id="downloadSpeedMessage">
+                                <span class="message-icon">💡</span>
+                                <span class="message-text">1000Mbps 설정: 기가비트 인터넷 환경, 고속 다운로드 가능</span>
+                            </div>
+                        </div>
+                        <div class="broadband-item">
+                            <label for="downloadSpeedStability">다운로드 안정성:</label>
+                            <select id="downloadSpeedStability">
+                                <option value="stable" selected>안정적 (99.9%)</option>
+                                <option value="moderate">보통 (95%)</option>
+                                <option value="unstable">불안정 (80%)</option>
+                            </select>
+                            <div class="dynamic-message" id="downloadStabilityMessage">
+                                <span class="message-icon">💡</span>
+                                <span class="message-text">안정적 선택: 일정한 속도 유지, 스트리밍과 게임에 최적</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="broadband-group">
+                        <h3>📤 업로드 속도 제한</h3>
+                        <div class="broadband-item">
+                            <label for="maxUploadSpeed">최대 업로드 속도:</label>
+                            <div class="speed-input-group">
+                                <input type="number" id="maxUploadSpeed" min="1" max="1000" value="100" step="1">
+                                <select id="uploadSpeedUnit">
+                                    <option value="Mbps" selected>Mbps</option>
+                                    <option value="Gbps">Gbps</option>
+                                </select>
+                            </div>
+                            <div class="dynamic-message" id="uploadSpeedMessage">
+                                <span class="message-icon">💡</span>
+                                <span class="message-text">100Mbps 설정: 일반적인 가정용 업로드 속도, 화상회의 충분</span>
+                            </div>
+                        </div>
+                        <div class="broadband-item">
+                            <label for="uploadSpeedStability">업로드 안정성:</label>
+                            <select id="uploadSpeedStability">
+                                <option value="stable" selected>안정적 (99.9%)</option>
+                                <option value="moderate">보통 (95%)</option>
+                                <option value="unstable">불안정 (80%)</option>
+                            </select>
+                            <div class="dynamic-message" id="uploadStabilityMessage">
+                                <span class="message-icon">💡</span>
+                                <span class="message-text">안정적 선택: 원격 작업과 클라우드 업로드에 최적</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="broadband-group">
+                        <h3>🌍 인터넷 환경</h3>
+                        <div class="broadband-item">
+                            <label for="internetType">인터넷 타입:</label>
+                            <select id="internetType">
+                                <option value="fiber" selected>광케이블 (Fiber)</option>
+                                <option value="cable">케이블 (Cable)</option>
+                                <option value="dsl">DSL</option>
+                                <option value="wireless">무선 (5G/WiMAX)</option>
+                            </select>
+                            <div class="dynamic-message" id="internetTypeMessage">
+                                <span class="message-icon">💡</span>
+                                <span class="message-text">광케이블 선택: 최고 속도와 안정성, 낮은 지연시간</span>
+                            </div>
+                        </div>
+                        <div class="broadband-item">
+                            <label for="networkCongestion">네트워크 혼잡도:</label>
+                            <select id="networkCongestion">
+                                <option value="low" selected>낮음 (새벽/아침)</option>
+                                <option value="medium">보통 (오후)</option>
+                                <option value="high">높음 (저녁/밤)</option>
+                            </select>
+                            <div class="dynamic-message" id="congestionMessage">
+                                <span class="message-icon">💡</span>
+                                <span class="message-text">낮은 혼잡도: 최대 속도 달성, 안정적인 연결</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="broadband-summary">
+                    <h3>📊 브로드밴드 설정 요약</h3>
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <span class="label">다운로드:</span>
+                            <span class="value" id="summaryDownload">1000 Mbps (안정적)</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">업로드:</span>
+                            <span class="value" id="summaryUpload">100 Mbps (안정적)</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">인터넷:</span>
+                            <span class="value" id="summaryInternet">광케이블 (낮은 혼잡도)</span>
                         </div>
                     </div>
                 </div>
@@ -263,6 +377,35 @@
                 <button id="startExperiment" class="btn-primary">실험 시작</button>
                 <button id="resetExperiment" class="btn-secondary">실험 초기화</button>
                 <button id="saveResults" class="btn-success">결과 저장</button>
+            </div>
+
+            <div class="json-import-section">
+                <h3>📁 결과 불러오기 (JSON)</h3>
+                <div class="file-upload-area">
+                    <input type="file" id="jsonFileInput" accept=".json" style="display: none;">
+                    <button id="selectJsonFile" class="btn-secondary">JSON 파일 선택</button>
+                    <span id="selectedFileName" class="file-name">파일을 선택해주세요</span>
+                </div>
+                <div class="import-options">
+                    <label>
+                        <input type="checkbox" id="overwriteCurrent" checked>
+                        현재 설정 덮어쓰기
+                    </label>
+                    <label>
+                        <input type="checkbox" id="loadChartData" checked>
+                        차트 데이터 불러오기
+                    </label>
+                    <label>
+                        <input type="checkbox" id="loadRouterSpecs" checked>
+                        공유기 스펙 불러오기
+                    </label>
+                    <label>
+                        <input type="checkbox" id="loadBroadbandSpecs" checked>
+                        브로드밴드 설정 불러오기
+                    </label>
+                </div>
+                <button id="loadJsonResults" class="btn-primary" disabled>결과 불러오기</button>
+                <div id="importStatus" class="import-status"></div>
             </div>
         </div>
 

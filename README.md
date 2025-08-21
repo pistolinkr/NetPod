@@ -1,5 +1,41 @@
 # 🌐 NetPod
 
+WiFi 간섭 현상 시뮬레이션 및 학습 플랫폼
+
+## 📁 프로젝트 구조
+
+```
+Network Test/
+├── index.html          # 메인 웹 애플리케이션
+├── styles.css          # 스타일시트
+├── script.js           # JavaScript 로직
+├── assets/             # 정적 자산 폴더
+│   └── images/         # 이미지 및 로고 폴더
+│       ├── logo.png    # NetPod 로고 (권장: 200x200px)
+│       ├── favicon.ico # 파비콘 (권장: 32x32px)
+│       └── banner.png  # 배너 이미지 (권장: 1200x300px)
+└── README.md           # 프로젝트 문서
+```
+
+## 🎨 로고 및 이미지 가이드
+
+### 로고 폴더 위치
+- **경로**: `assets/images/`
+- **용도**: NetPod 브랜드 이미지, 로고, 아이콘 저장
+
+### 권장 이미지 사양
+- **메인 로고**: PNG 형식, 투명 배경, 200x200px
+- **파비콘**: ICO 형식, 32x32px
+- **배너**: PNG 형식, 1200x300px
+- **아이콘**: SVG 또는 PNG 형식, 64x64px
+
+### 로고 사용법
+1. 로고 이미지를 `assets/images/` 폴더에 저장
+2. `index.html`에서 `<img src="assets/images/logo.png">` 형태로 사용
+3. CSS에서 `background-image: url('assets/images/logo.png')` 형태로 사용
+
+## 🚀 주요 기능
+
 2.4GHz와 5GHz WiFi 대역대의 간섭 현상을 시뮬레이션하고 학습할 수 있는 웹 애플리케이션입니다.
 
 ## 📋 목차
@@ -24,23 +60,6 @@
 - **실시간 시뮬레이션**: 1초마다 업데이트되는 신호 변화
 - **데이터 시각화**: RSSI, 전송 속도, 신호 품질 등의 실시간 그래프
 - **결과 저장**: JSON 형태로 실험 데이터 다운로드
-
-## 🚀 설치 및 실행
-
-### 요구사항
-- 모던 웹 브라우저 (Chrome, Firefox, Safari, Edge)
-- 인터넷 연결 (로컬 실행 시 불필요)
-
-### 실행 방법
-1. 프로젝트 파일을 다운로드
-2. `index.html` 파일을 웹 브라우저에서 열기
-3. 즉시 사용 가능!
-
-```bash
-# 또는 로컬 서버로 실행 (선택사항)
-python -m http.server 8000
-# http://localhost:8000 접속
-```
 
 ## 📖 사용 방법
 

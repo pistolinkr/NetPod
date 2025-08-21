@@ -13,8 +13,10 @@ class WiFiInterferenceLab {
         this.initializeChart();
         this.loadDefaultValues();
         
-        // Update specs summary initially
+        // Update specs summary and dynamic messages initially
         this.updateSpecsSummary();
+        this.updateDynamicMessages();
+        this.updateBroadbandMessages();
     }
 
     initializeElements() {
@@ -75,6 +77,32 @@ class WiFiInterferenceLab {
         this.summary5 = document.getElementById('summary5');
         this.summaryAntenna = document.getElementById('summaryAntenna');
         this.summaryLocation = document.getElementById('summaryLocation');
+        
+        // Broadband specifications elements
+        this.maxDownloadSpeed = document.getElementById('maxDownloadSpeed');
+        this.downloadSpeedUnit = document.getElementById('downloadSpeedUnit');
+        this.downloadSpeedStability = document.getElementById('downloadSpeedStability');
+        this.maxUploadSpeed = document.getElementById('maxUploadSpeed');
+        this.uploadSpeedUnit = document.getElementById('uploadSpeedUnit');
+        this.uploadSpeedStability = document.getElementById('uploadSpeedStability');
+        this.internetType = document.getElementById('internetType');
+        this.networkCongestion = document.getElementById('networkCongestion');
+        
+        // Broadband summary elements
+        this.summaryDownload = document.getElementById('summaryDownload');
+        this.summaryUpload = document.getElementById('summaryUpload');
+        this.summaryInternet = document.getElementById('summaryInternet');
+        
+        // JSON import elements
+        this.jsonFileInput = document.getElementById('jsonFileInput');
+        this.selectJsonFile = document.getElementById('selectJsonFile');
+        this.selectedFileName = document.getElementById('selectedFileName');
+        this.overwriteCurrent = document.getElementById('overwriteCurrent');
+        this.loadChartData = document.getElementById('loadChartData');
+        this.loadRouterSpecs = document.getElementById('loadRouterSpecs');
+        this.loadBroadbandSpecs = document.getElementById('loadBroadbandSpecs');
+        this.loadJsonResults = document.getElementById('loadJsonResults');
+        this.importStatus = document.getElementById('importStatus');
     }
 
     bindEvents() {
@@ -122,6 +150,21 @@ class WiFiInterferenceLab {
         this.routerAntenna.addEventListener('change', () => this.updateRouterSpecs());
         this.routerHeight.addEventListener('input', () => this.updateRouterSpecs());
         this.routerLocation.addEventListener('change', () => this.updateRouterSpecs());
+        
+        // Broadband specifications events
+        this.maxDownloadSpeed.addEventListener('input', () => this.updateBroadbandSpecs());
+        this.downloadSpeedUnit.addEventListener('change', () => this.updateBroadbandSpecs());
+        this.downloadSpeedStability.addEventListener('change', () => this.updateBroadbandSpecs());
+        this.maxUploadSpeed.addEventListener('input', () => this.updateBroadbandSpecs());
+        this.uploadSpeedUnit.addEventListener('change', () => this.updateBroadbandSpecs());
+        this.uploadSpeedStability.addEventListener('change', () => this.updateBroadbandSpecs());
+        this.internetType.addEventListener('change', () => this.updateBroadbandSpecs());
+        this.networkCongestion.addEventListener('change', () => this.updateBroadbandSpecs());
+        
+        // JSON import events
+        this.selectJsonFile.addEventListener('click', () => this.jsonFileInput.click());
+        this.jsonFileInput.addEventListener('change', (e) => this.handleFileSelection(e));
+        this.loadJsonResults.addEventListener('click', () => this.loadJsonFile());
     }
 
     initializeChart() {
@@ -632,7 +675,7 @@ class WiFiInterferenceLab {
         // 실험 결과 데이터 구성
         const experimentData = {
             timestamp: new Date().toISOString(),
-            settings: {
+            experimentSettings: {
                 frequency: this.elements.frequency.value,
                 distance: this.elements.distance.value,
                 walls: this.elements.walls.value,
@@ -649,6 +692,27 @@ class WiFiInterferenceLab {
                 quality: this.elements.qualityText.textContent,
                 interference: this.elements.interferenceIndex.textContent
             },
+            routerSpecs: {
+                power24: this.router24Power.value,
+                channel24: this.router24Channels.value,
+                bandwidth24: this.router24Bandwidth.value,
+                power5: this.router5Power.value,
+                channel5: this.router5Channels.value,
+                bandwidth5: this.router5Bandwidth.value,
+                antenna: this.routerAntenna.value,
+                height: this.routerHeight.value,
+                location: this.routerLocation.value
+            },
+            broadbandSpecs: {
+                maxDownloadSpeed: this.maxDownloadSpeed.value,
+                downloadSpeedUnit: this.downloadSpeedUnit.value,
+                downloadSpeedStability: this.downloadSpeedStability.value,
+                maxUploadSpeed: this.maxUploadSpeed.value,
+                uploadSpeedUnit: this.uploadSpeedUnit.value,
+                uploadSpeedStability: this.uploadSpeedStability.value,
+                internetType: this.internetType.value,
+                networkCongestion: this.networkCongestion.value
+            },
             chartData: this.chartData
         };
         
@@ -659,7 +723,7 @@ class WiFiInterferenceLab {
         
         const link = document.createElement('a');
         link.href = url;
-        link.download = `wifi_experiment_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
+        link.download = `netpod_experiment_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
         link.click();
         
         URL.revokeObjectURL(url);
@@ -734,12 +798,364 @@ class WiFiInterferenceLab {
         this.router5PowerValue.textContent = `${this.router5Power.value} mW`;
         this.routerHeightValue.textContent = `${this.routerHeight.value} m`;
         
+        // Update dynamic messages
+        this.updateDynamicMessages();
+        
         // Update summary
         this.updateSpecsSummary();
         
         // If experiment is running, recalculate with new specs
         if (this.isExperimentRunning) {
             this.updateCalculations();
+        }
+    }
+
+    updateBroadbandSpecs() {
+        // Update value displays
+        this.summaryDownload.textContent = `${this.maxDownloadSpeed.value} Mbps`;
+        this.summaryUpload.textContent = `${this.maxUploadSpeed.value} Mbps`;
+        this.summaryInternet.textContent = `${this.internetType.options[this.internetType.selectedIndex].text}`;
+
+        // Update dynamic messages
+        this.updateDynamicMessages();
+
+        // If experiment is running, recalculate with new specs
+        if (this.isExperimentRunning) {
+            this.updateCalculations();
+        }
+    }
+
+    updateDynamicMessages() {
+        // 2.4GHz Power message
+        const power24 = parseInt(this.router24Power.value);
+        let power24Message = "";
+        if (power24 <= 50) {
+            power24Message = `${power24}mW 설정: 배터리 절약 모드, 간섭 최소화, 범위 제한적`;
+        } else if (power24 <= 100) {
+            power24Message = `${power24}mW 설정: 균형잡힌 성능, 일반적인 가정 환경에 적합`;
+        } else {
+            power24Message = `${power24}mW 설정: 범위 확장, 높은 신호 강도, 간섭 가능성 증가`;
+        }
+        document.getElementById('power24Message').querySelector('.message-text').textContent = power24Message;
+
+        // 2.4GHz Channel message
+        const channel24 = this.router24Channels.value;
+        let channel24Message = "";
+        if (channel24 === "1") {
+            channel24Message = "채널 1 선택됨: 다른 2.4GHz 장치와 간섭 최소화, 다만 블루투스와 간섭 가능성";
+        } else if (channel24 === "6") {
+            channel24Message = "채널 6 선택됨: 다른 2.4GHz 장치와 간섭 최소화, 가장 안정적인 선택";
+        } else if (channel24 === "11") {
+            channel24Message = "채널 11 선택됨: 다른 2.4GHz 장치와 간섭 최소화, 마이크로웨이브와 간섭 가능성";
+        } else {
+            channel24Message = "자동 선택: 환경에 따라 최적 채널 자동 선택, 간헐적 채널 변경 가능";
+        }
+        document.getElementById('channel24Message').querySelector('.message-text').textContent = channel24Message;
+
+        // 2.4GHz Bandwidth message
+        const bandwidth24 = this.router24Bandwidth.value;
+        let bandwidth24Message = "";
+        if (bandwidth24 === "20") {
+            bandwidth24Message = "20MHz 선택됨: 최대 안정성, 간섭 최소화, 다만 속도 제한적";
+        } else {
+            bandwidth24Message = "40MHz 선택됨: 속도 향상, 다만 간섭 가능성 증가, 채널 겹침 주의";
+        }
+        document.getElementById('bandwidth24Message').querySelector('.message-text').textContent = bandwidth24Message;
+
+        // 5GHz Power message
+        const power5 = parseInt(this.router5Power.value);
+        let power5Message = "";
+        if (power5 <= 100) {
+            power5Message = `${power5}mW 설정: 5GHz는 낮은 파워로도 충분, 배터리 절약 및 간섭 감소`;
+        } else if (power5 <= 500) {
+            power5Message = `${power5}mW 설정: 5GHz 표준 파워, 균형잡힌 성능, 대부분 환경에 적합`;
+        } else {
+            power5Message = `${power5}mW 설정: 5GHz 고파워, 범위 확장 시도, 다만 벽 투과력 한계`;
+        }
+        document.getElementById('power5Message').querySelector('.message-text').textContent = power5Message;
+
+        // 5GHz Channel message
+        const channel5 = this.router5Channels.value;
+        let channel5Message = "";
+        if (channel5 === "auto") {
+            channel5Message = "자동 선택: 환경에 따라 최적 채널 자동 선택, DFS 채널 활용 가능";
+        } else if (parseInt(channel5) <= 48) {
+            channel5Message = `채널 ${channel5} 선택됨: 낮은 주파수, DFS 제한 가능성, 실내 사용 권장`;
+        } else {
+            channel5Message = `채널 ${channel5} 선택됨: 높은 주파수, DFS 제한 없음, 안정적인 신호 전송`;
+        }
+        document.getElementById('channel5Message').querySelector('.message-text').textContent = channel5Message;
+
+        // 5GHz Bandwidth message
+        const bandwidth5 = this.router5Bandwidth.value;
+        let bandwidth5Message = "";
+        if (bandwidth5 === "20") {
+            bandwidth5Message = "20MHz 선택됨: 최대 안정성, 간섭 최소화, 다만 속도 제한적";
+        } else if (bandwidth5 === "40") {
+            bandwidth5Message = "40MHz 선택됨: 속도 향상, 안정성 유지, 대부분 환경에 적합";
+        } else if (bandwidth5 === "80") {
+            bandwidth5Message = "80MHz 선택됨: 속도와 안정성의 균형, 대부분 환경에 적합";
+        } else {
+            bandwidth5Message = "160MHz 선택됨: 최고 속도, 다만 간섭에 민감, 깨끗한 환경 필요";
+        }
+        document.getElementById('bandwidth5Message').querySelector('.message-text').textContent = bandwidth5Message;
+
+        // Antenna message
+        const antenna = this.routerAntenna.value;
+        let antennaMessage = "";
+        if (antenna === "internal") {
+            antennaMessage = "내장 안테나 선택됨: 간섭 최소화, 다만 범위 제한적, 소형 장치에 적합";
+        } else if (antenna === "external") {
+            antennaMessage = "외장 안테나 (3dBi) 선택됨: 균형잡힌 성능, 범위와 안정성 조화, 일반적인 선택";
+        } else {
+            antennaMessage = "고이득 안테나 (6dBi) 선택됨: 범위 확장, 다만 간섭 증가, 넓은 공간에 적합";
+        }
+        document.getElementById('antennaMessage').querySelector('.message-text').textContent = antennaMessage;
+
+        // Height message
+        const height = parseFloat(this.routerHeight.value);
+        let heightMessage = "";
+        if (height <= 1.0) {
+            heightMessage = `${height}m 높이: 특정 구역 집중 신호, 다만 범위 제한적, 작은 공간에 적합`;
+        } else if (height <= 2.0) {
+            heightMessage = `${height}m 높이: 일반적인 가정 환경에 적합, 균형잡힌 신호 분포`;
+        } else {
+            heightMessage = `${height}m 높이: 범위 확장, 전체 공간 커버, 다만 특정 구역 신호 약화 가능`;
+        }
+        document.getElementById('heightMessage').querySelector('.message-text').textContent = heightMessage;
+
+        // Location message
+        const location = this.routerLocation.value;
+        let locationMessage = "";
+        if (location === "center") {
+            locationMessage = "중앙 설치: 균등한 신호 분포, 모든 방에 고른 신호, 다만 벽 반사 효과 제한적";
+        } else if (location === "corner") {
+            locationMessage = "구석 설치: 특정 방에 집중된 신호, 벽 반사 효과 활용, 다만 반대편 신호 약화";
+        } else if (location === "wall") {
+            locationMessage = "벽면 설치: 한쪽 방향 신호 집중, 벽 투과력 향상, 다만 반대편 신호 약화";
+        } else {
+            locationMessage = "천장 설치: 전체 범위 확장, 모든 방에 고른 신호, 다만 설치 및 관리 복잡";
+        }
+        document.getElementById('locationMessage').querySelector('.message-text').textContent = locationMessage;
+        
+        // Broadband dynamic messages
+        this.updateBroadbandMessages();
+    }
+
+    updateBroadbandMessages() {
+        // Download speed message
+        const downloadSpeed = parseInt(this.maxDownloadSpeed.value);
+        const downloadUnit = this.downloadSpeedUnit.value;
+        let downloadSpeedMessage = "";
+        if (downloadSpeed <= 100) {
+            downloadSpeedMessage = `${downloadSpeed}${downloadUnit} 설정: 기본 인터넷 환경, 웹서핑과 이메일 충분`;
+        } else if (downloadSpeed <= 500) {
+            downloadSpeedMessage = `${downloadSpeed}${downloadUnit} 설정: 중급 인터넷 환경, HD 스트리밍과 온라인 게임 가능`;
+        } else if (downloadSpeed <= 1000) {
+            downloadSpeedMessage = `${downloadSpeed}${downloadUnit} 설정: 기가비트 인터넷 환경, 고속 다운로드와 4K 스트리밍`;
+        } else {
+            downloadSpeedMessage = `${downloadSpeed}${downloadUnit} 설정: 초고속 인터넷 환경, 대용량 파일 전송과 멀티태스킹`;
+        }
+        document.getElementById('downloadSpeedMessage').querySelector('.message-text').textContent = downloadSpeedMessage;
+
+        // Download stability message
+        const downloadStability = this.downloadSpeedStability.value;
+        let downloadStabilityMessage = "";
+        if (downloadStability === "stable") {
+            downloadStabilityMessage = "안정적 선택: 일정한 속도 유지, 스트리밍과 게임에 최적, 지연시간 최소화";
+        } else if (downloadStability === "moderate") {
+            downloadStabilityMessage = "보통 선택: 약간의 속도 변동, 일반적인 인터넷 사용에 적합";
+        } else {
+            downloadStabilityMessage = "불안정 선택: 속도 변동이 큼, 다만 비용 절약, 간헐적 사용에 적합";
+        }
+        document.getElementById('downloadStabilityMessage').querySelector('.message-text').textContent = downloadStabilityMessage;
+
+        // Upload speed message
+        const uploadSpeed = parseInt(this.maxUploadSpeed.value);
+        const uploadUnit = this.uploadSpeedUnit.value;
+        let uploadSpeedMessage = "";
+        if (uploadSpeed <= 20) {
+            uploadSpeedMessage = `${uploadSpeed}${uploadUnit} 설정: 기본 업로드 환경, 이메일과 소셜미디어 충분`;
+        } else if (uploadSpeed <= 50) {
+            uploadSpeedMessage = `${uploadSpeed}${uploadUnit} 설정: 중급 업로드 환경, 화상회의와 클라우드 백업 가능`;
+        } else if (uploadSpeed <= 100) {
+            uploadSpeedMessage = `${uploadSpeed}${uploadUnit} 설정: 고속 업로드 환경, 대용량 파일 업로드와 라이브 스트리밍`;
+        } else {
+            uploadSpeedMessage = `${uploadSpeed}${uploadUnit} 설정: 초고속 업로드 환경, 전문가급 콘텐츠 제작과 클라우드 작업`;
+        }
+        document.getElementById('uploadSpeedMessage').querySelector('.message-text').textContent = uploadSpeedMessage;
+
+        // Upload stability message
+        const uploadStability = this.uploadSpeedStability.value;
+        let uploadStabilityMessage = "";
+        if (uploadStability === "stable") {
+            uploadStabilityMessage = "안정적 선택: 원격 작업과 클라우드 업로드에 최적, 지연시간 최소화";
+        } else if (uploadStability === "moderate") {
+            uploadStabilityMessage = "보통 선택: 약간의 속도 변동, 일반적인 업로드 작업에 적합";
+        } else {
+            uploadStabilityMessage = "불안정 선택: 속도 변동이 큼, 다만 비용 절약, 간헐적 업로드에 적합";
+        }
+        document.getElementById('uploadStabilityMessage').querySelector('.message-text').textContent = uploadStabilityMessage;
+
+        // Internet type message
+        const internetType = this.internetType.value;
+        let internetTypeMessage = "";
+        if (internetType === "fiber") {
+            internetTypeMessage = "광케이블 선택: 최고 속도와 안정성, 낮은 지연시간, 대부분 환경에 최적";
+        } else if (internetType === "cable") {
+            internetTypeMessage = "케이블 선택: 안정적인 속도, 다만 공유 사용자에 따른 속도 변동 가능";
+        } else if (internetType === "dsl") {
+            internetTypeMessage = "DSL 선택: 안정적인 연결, 다만 속도 제한적, 거리에 따른 성능 저하";
+        } else {
+            internetTypeMessage = "무선 선택: 이동성과 편의성, 다만 날씨와 환경에 따른 성능 변동";
+        }
+        document.getElementById('internetTypeMessage').querySelector('.message-text').textContent = internetTypeMessage;
+
+        // Network congestion message
+        const congestion = this.networkCongestion.value;
+        let congestionMessage = "";
+        if (congestion === "low") {
+            congestionMessage = "낮은 혼잡도: 최대 속도 달성, 안정적인 연결, 새벽/아침 시간대 특성";
+        } else if (congestion === "medium") {
+            congestionMessage = "보통 혼잡도: 약간의 속도 저하, 일반적인 인터넷 사용에 적합";
+        } else {
+            congestionMessage = "높은 혼잡도: 속도 저하 가능, 다만 대부분 서비스 정상 이용 가능";
+        }
+        document.getElementById('congestionMessage').querySelector('.message-text').textContent = congestionMessage;
+    }
+
+    handleFileSelection(event) {
+        const file = event.target.files[0];
+        if (file) {
+            this.selectedFileName.textContent = file.name;
+            this.loadJsonResults.disabled = false;
+            this.showImportStatus('파일이 선택되었습니다. "결과 불러오기" 버튼을 클릭하세요.', 'info');
+        }
+    }
+
+    loadJsonFile() {
+        const file = this.jsonFileInput.files[0];
+        if (!file) {
+            this.showImportStatus('파일을 먼저 선택해주세요.', 'error');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const jsonData = JSON.parse(e.target.result);
+                this.processJsonData(jsonData);
+                this.showImportStatus('JSON 파일을 성공적으로 불러왔습니다!', 'success');
+            } catch (error) {
+                this.showImportStatus(`JSON 파싱 오류: ${error.message}`, 'error');
+            }
+        };
+        reader.onerror = () => {
+            this.showImportStatus('파일 읽기 오류가 발생했습니다.', 'error');
+        };
+        reader.readAsText(file);
+    }
+
+    processJsonData(data) {
+        try {
+            // Load chart data if enabled
+            if (this.loadChartData.checked && data.chartData) {
+                this.loadChartDataFromJson(data.chartData);
+            }
+
+            // Load router specifications if enabled
+            if (this.loadRouterSpecs.checked && data.routerSpecs) {
+                this.loadRouterSpecsFromJson(data.routerSpecs);
+            }
+
+            // Load broadband specifications if enabled
+            if (this.loadBroadbandSpecs.checked && data.broadbandSpecs) {
+                this.loadBroadbandSpecsFromJson(data.broadbandSpecs);
+            }
+
+            // Load experiment settings if enabled
+            if (this.overwriteCurrent.checked && data.experimentSettings) {
+                this.loadExperimentSettingsFromJson(data.experimentSettings);
+            }
+
+            // Update all displays
+            this.updateAllDisplays();
+            
+        } catch (error) {
+            this.showImportStatus(`데이터 처리 오류: ${error.message}`, 'error');
+        }
+    }
+
+    loadChartDataFromJson(chartData) {
+        if (Array.isArray(chartData)) {
+            this.chartData = chartData.map(item => ({
+                time: item.time || 0,
+                rssi: item.rssi || -50
+            }));
+            this.updateChart();
+        }
+    }
+
+    loadRouterSpecsFromJson(routerSpecs) {
+        if (routerSpecs.power24) this.router24Power.value = routerSpecs.power24;
+        if (routerSpecs.channel24) this.router24Channels.value = routerSpecs.channel24;
+        if (routerSpecs.bandwidth24) this.router24Bandwidth.value = routerSpecs.bandwidth24;
+        if (routerSpecs.power5) this.router5Power.value = routerSpecs.power5;
+        if (routerSpecs.channel5) this.router5Channels.value = routerSpecs.channel5;
+        if (routerSpecs.bandwidth5) this.router5Bandwidth.value = routerSpecs.bandwidth5;
+        if (routerSpecs.antenna) this.routerAntenna.value = routerSpecs.antenna;
+        if (routerSpecs.height) this.routerHeight.value = routerSpecs.height;
+        if (routerSpecs.location) this.routerLocation.value = routerSpecs.location;
+    }
+
+    loadBroadbandSpecsFromJson(broadbandSpecs) {
+        if (broadbandSpecs.maxDownloadSpeed) this.maxDownloadSpeed.value = broadbandSpecs.maxDownloadSpeed;
+        if (broadbandSpecs.downloadSpeedUnit) this.downloadSpeedUnit.value = broadbandSpecs.downloadSpeedUnit;
+        if (broadbandSpecs.downloadSpeedStability) this.downloadSpeedStability.value = broadbandSpecs.downloadSpeedStability;
+        if (broadbandSpecs.maxUploadSpeed) this.maxUploadSpeed.value = broadbandSpecs.maxUploadSpeed;
+        if (broadbandSpecs.uploadSpeedUnit) this.uploadSpeedUnit.value = broadbandSpecs.uploadSpeedUnit;
+        if (broadbandSpecs.uploadSpeedStability) this.uploadSpeedStability.value = broadbandSpecs.uploadSpeedStability;
+        if (broadbandSpecs.internetType) this.internetType.value = broadbandSpecs.internetType;
+        if (broadbandSpecs.networkCongestion) this.networkCongestion.value = broadbandSpecs.networkCongestion;
+    }
+
+    loadExperimentSettingsFromJson(experimentSettings) {
+        if (experimentSettings.frequency) this.elements.frequency.value = experimentSettings.frequency;
+        if (experimentSettings.distance) this.elements.distance.value = experimentSettings.distance;
+        if (experimentSettings.walls) this.elements.walls.value = experimentSettings.walls;
+        if (experimentSettings.interference) this.elements.interference.value = experimentSettings.interference;
+        if (experimentSettings.channel) this.elements.channel.value = experimentSettings.channel;
+        if (experimentSettings.power) this.elements.power.value = experimentSettings.power;
+        if (experimentSettings.weather) this.elements.weather.value = experimentSettings.weather;
+        if (experimentSettings.time) this.elements.time.value = experimentSettings.time;
+    }
+
+    updateAllDisplays() {
+        // Update router specs
+        this.updateRouterSpecs();
+        
+        // Update broadband specs
+        this.updateBroadbandSpecs();
+        
+        // Update experiment calculations
+        this.updateCalculations();
+        
+        // Update chart if data was loaded
+        if (this.chartData.length > 0) {
+            this.updateChart();
+        }
+    }
+
+    showImportStatus(message, type) {
+        this.importStatus.textContent = message;
+        this.importStatus.className = `import-status ${type}`;
+        
+        // Auto-clear success messages after 5 seconds
+        if (type === 'success') {
+            setTimeout(() => {
+                this.importStatus.textContent = '';
+                this.importStatus.className = 'import-status';
+            }, 5000);
         }
     }
 }
