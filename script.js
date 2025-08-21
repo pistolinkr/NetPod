@@ -309,6 +309,37 @@ class WiFiInterferenceLab {
     loadDefaultValues() {
         // 기본값으로 계산 실행
         this.updateCalculations();
+        
+        // 초기 차트 데이터 추가 (차트가 보이도록)
+        this.addInitialChartData();
+    }
+
+    addInitialChartData() {
+        // 초기 차트 데이터 생성 (사인파 패턴)
+        this.chartData = [];
+        this.currentTime = 0;
+        
+        for (let i = 0; i < 50; i++) {
+            let time = i;
+            let baseRSSI = -50; // 기본 RSSI 값
+            let sineVariation = Math.sin(time * 0.2) * 8;
+            let cosineVariation = Math.cos(time * 0.1) * 5;
+            let noiseVariation = (Math.random() - 0.5) * 2;
+            
+            let enhancedRSSI = baseRSSI + sineVariation + cosineVariation + noiseVariation;
+            enhancedRSSI = Math.max(-100, Math.min(-30, enhancedRSSI));
+            
+            this.chartData.push({
+                time: time,
+                rssi: enhancedRSSI
+            });
+        }
+        
+        // 차트 업데이트
+        if (this.chart) {
+            this.updateChart();
+            console.log('Initial chart data added:', this.chartData.length, 'points');
+        }
     }
 
     updateCalculations() {
